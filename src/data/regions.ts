@@ -1,175 +1,59 @@
 export type RegionType = 'continent' | 'ocean' | 'sea' | 'region'
 
-export interface DropZone {
-  cx: number
-  cy: number
-  r: number
+export interface GeoZone {
+  lon: number
+  lat: number
+  radius: number
 }
 
 export interface Region {
   id: string
   name: string
   type: RegionType
-  dropZone: DropZone
-  highlightId: string
+  geo: GeoZone
 }
 
-export const MAP_VIEWBOX = { width: 800, height: 450 }
-
 export const regions: Region[] = [
-  {
-    id: 'antarctica',
-    name: 'Antarctica',
-    type: 'continent',
-    dropZone: { cx: 400, cy: 410, r: 70 },
-    highlightId: 'zone-antarctica',
-  },
-  {
-    id: 'caribbean-islands',
-    name: 'Caribbean Islands',
-    type: 'region',
-    dropZone: { cx: 195, cy: 235, r: 40 },
-    highlightId: 'zone-caribbean-islands',
-  },
-  {
-    id: 'mediterranean-sea',
-    name: 'Mediterranean Sea',
-    type: 'sea',
-    dropZone: { cx: 455, cy: 195, r: 35 },
-    highlightId: 'zone-mediterranean-sea',
-  },
-  {
-    id: 'southeast-asia',
-    name: 'Southeast Asia',
-    type: 'region',
-    dropZone: { cx: 640, cy: 255, r: 45 },
-    highlightId: 'zone-southeast-asia',
-  },
-  {
-    id: 'atlantic-ocean',
-    name: 'Atlantic Ocean',
-    type: 'ocean',
-    dropZone: { cx: 300, cy: 250, r: 55 },
-    highlightId: 'zone-atlantic-ocean',
-  },
-  {
-    id: 'oceania',
-    name: 'Oceania',
-    type: 'region',
-    dropZone: { cx: 700, cy: 320, r: 50 },
-    highlightId: 'zone-oceania',
-  },
-  {
-    id: 'caribbean-sea',
-    name: 'Caribbean Sea',
-    type: 'sea',
-    dropZone: { cx: 210, cy: 255, r: 35 },
-    highlightId: 'zone-caribbean-sea',
-  },
-  {
-    id: 'southern-ocean',
-    name: 'Southern Ocean',
-    type: 'ocean',
-    dropZone: { cx: 400, cy: 370, r: 60 },
-    highlightId: 'zone-southern-ocean',
-  },
-  {
-    id: 'pacific-ocean',
-    name: 'Pacific Ocean',
-    type: 'ocean',
-    dropZone: { cx: 680, cy: 200, r: 65 },
-    highlightId: 'zone-pacific-ocean',
-  },
-  {
-    id: 'europe',
-    name: 'Europe',
-    type: 'continent',
-    dropZone: { cx: 455, cy: 155, r: 40 },
-    highlightId: 'zone-europe',
-  },
-  {
-    id: 'middle-east',
-    name: 'Middle East',
-    type: 'region',
-    dropZone: { cx: 520, cy: 215, r: 40 },
-    highlightId: 'zone-middle-east',
-  },
-  {
-    id: 'australia',
-    name: 'Australia',
-    type: 'continent',
-    dropZone: { cx: 680, cy: 330, r: 40 },
-    highlightId: 'zone-australia',
-  },
-  {
-    id: 'central-america',
-    name: 'Central America',
-    type: 'region',
-    dropZone: { cx: 175, cy: 265, r: 35 },
-    highlightId: 'zone-central-america',
-  },
-  {
-    id: 'gulf-of-mexico',
-    name: 'Gulf of Mexico',
-    type: 'sea',
-    dropZone: { cx: 175, cy: 215, r: 35 },
-    highlightId: 'zone-gulf-of-mexico',
-  },
-  {
-    id: 'north-america',
-    name: 'North America',
-    type: 'continent',
-    dropZone: { cx: 155, cy: 165, r: 55 },
-    highlightId: 'zone-north-america',
-  },
-  {
-    id: 'south-america',
-    name: 'South America',
-    type: 'continent',
-    dropZone: { cx: 230, cy: 320, r: 50 },
-    highlightId: 'zone-south-america',
-  },
-  {
-    id: 'asia',
-    name: 'Asia',
-    type: 'continent',
-    dropZone: { cx: 580, cy: 185, r: 60 },
-    highlightId: 'zone-asia',
-  },
-  {
-    id: 'indian-ocean',
-    name: 'Indian Ocean',
-    type: 'ocean',
-    dropZone: { cx: 560, cy: 310, r: 55 },
-    highlightId: 'zone-indian-ocean',
-  },
-  {
-    id: 'africa',
-    name: 'Africa',
-    type: 'continent',
-    dropZone: { cx: 470, cy: 280, r: 50 },
-    highlightId: 'zone-africa',
-  },
+  { id: 'antarctica', name: 'Antarctica', type: 'continent', geo: { lon: 0, lat: -78, radius: 18 } },
+  { id: 'caribbean-islands', name: 'Caribbean Islands', type: 'region', geo: { lon: -72, lat: 18, radius: 9 } },
+  { id: 'mediterranean-sea', name: 'Mediterranean Sea', type: 'sea', geo: { lon: 18, lat: 38, radius: 11 } },
+  { id: 'southeast-asia', name: 'Southeast Asia', type: 'region', geo: { lon: 110, lat: 8, radius: 14 } },
+  { id: 'atlantic-ocean', name: 'Atlantic Ocean', type: 'ocean', geo: { lon: -35, lat: 20, radius: 22 } },
+  { id: 'oceania', name: 'Oceania', type: 'region', geo: { lon: 165, lat: -10, radius: 16 } },
+  { id: 'caribbean-sea', name: 'Caribbean Sea', type: 'sea', geo: { lon: -78, lat: 15, radius: 9 } },
+  { id: 'southern-ocean', name: 'Southern Ocean', type: 'ocean', geo: { lon: 0, lat: -58, radius: 20 } },
+  { id: 'pacific-ocean', name: 'Pacific Ocean', type: 'ocean', geo: { lon: -155, lat: 5, radius: 28 } },
+  { id: 'europe', name: 'Europe', type: 'continent', geo: { lon: 15, lat: 52, radius: 14 } },
+  { id: 'middle-east', name: 'Middle East', type: 'region', geo: { lon: 45, lat: 28, radius: 12 } },
+  { id: 'australia', name: 'Australia', type: 'continent', geo: { lon: 134, lat: -25, radius: 12 } },
+  { id: 'central-america', name: 'Central America', type: 'region', geo: { lon: -87, lat: 14, radius: 7 } },
+  { id: 'gulf-of-mexico', name: 'Gulf of Mexico', type: 'sea', geo: { lon: -90, lat: 25, radius: 8 } },
+  { id: 'north-america', name: 'North America', type: 'continent', geo: { lon: -100, lat: 48, radius: 18 } },
+  { id: 'south-america', name: 'South America', type: 'continent', geo: { lon: -58, lat: -15, radius: 16 } },
+  { id: 'asia', name: 'Asia', type: 'continent', geo: { lon: 85, lat: 45, radius: 22 } },
+  { id: 'indian-ocean', name: 'Indian Ocean', type: 'ocean', geo: { lon: 78, lat: -18, radius: 22 } },
+  { id: 'africa', name: 'Africa', type: 'continent', geo: { lon: 20, lat: 2, radius: 18 } },
 ]
+
+/** Smaller / more specific zones first so drops resolve correctly. */
+const REGION_MATCH_ORDER = [...regions].sort((a, b) => a.geo.radius - b.geo.radius)
 
 export function getRegionById(id: string): Region | undefined {
   return regions.find((r) => r.id === id)
 }
 
-export function findRegionAtPoint(x: number, y: number): Region | undefined {
-  let closest: Region | undefined
-  let closestDist = Infinity
+function geoDistance(lon1: number, lat1: number, lon2: number, lat2: number): number {
+  return Math.hypot(lon1 - lon2, lat1 - lat2)
+}
 
-  for (const region of regions) {
-    const { cx, cy, r } = region.dropZone
-    const dist = Math.hypot(x - cx, y - cy)
-    if (dist <= r && dist < closestDist) {
-      closest = region
-      closestDist = dist
+export function findRegionAtGeo(lon: number, lat: number): Region | undefined {
+  for (const region of REGION_MATCH_ORDER) {
+    const { lon: cx, lat: cy, radius } = region.geo
+    if (geoDistance(lon, lat, cx, cy) <= radius) {
+      return region
     }
   }
-
-  return closest
+  return undefined
 }
 
 export function screenToSvgCoords(

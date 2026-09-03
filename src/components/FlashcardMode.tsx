@@ -5,6 +5,7 @@ import { useQuizSession } from '../hooks/useQuizSession'
 import { ChoiceButton } from './ChoiceButton'
 import { ProgressBar } from './ProgressBar'
 import { ResultsScreen } from './ResultsScreen'
+import { WorldMap } from './WorldMap'
 
 interface FlashcardModeProps {
   onBack: () => void
@@ -90,13 +91,13 @@ export function FlashcardMode({ onBack }: FlashcardModeProps) {
       )}
 
       <div className="question-card">
-        <p className="question-text">
-          Where is{' '}
-          <span className="question-highlight">
-            {session.currentQuestion?.name}
-          </span>
-          ?
-        </p>
+        <p className="question-text">What region is this?</p>
+        <div className="flashcard-map">
+          <WorldMap
+            highlightMode="prompt"
+            highlightedRegionId={session.currentQuestion?.id ?? null}
+          />
+        </div>
       </div>
 
       <div className="choices-grid">

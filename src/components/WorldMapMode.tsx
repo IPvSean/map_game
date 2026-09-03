@@ -7,7 +7,8 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { useCallback, useRef, useState } from 'react'
-import { findRegionAtPoint, regions, screenToSvgCoords } from '../data/regions'
+import { geoToSvg, svgToGeo } from '../data/mapProjection'
+import { findRegionAtGeo, regions, screenToSvgCoords } from '../data/regions'
 import { useQuizSession } from '../hooks/useQuizSession'
 import { DraggableChip } from './DraggableChip'
 import { ProgressBar } from './ProgressBar'
@@ -49,11 +50,12 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
       const centerY = rect.top + rect.height / 2
 
       const svgCoords = screenToSvgCoords(svgRef.current, centerX, centerY)
-      const droppedRegion = findRegionAtPoint(svgCoords.x, svgCoords.y)
+      const [lon, lat] = svgToGeo(svgCoords.x, svgCoords.y)
+      const droppedRegion = findRegionAtGeo(lon, lat)
 
       if (droppedRegion?.id === session.currentQuestion.id) {
         setAdvancing(true)
-        setHighlightedZone(session.currentQuestion.highlightId)
+        setHighlightedZone(session.currentQuestion.id)
         setFeedback('Great job!')
         session.markCorrect()
 
@@ -134,21 +136,25 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
         <div className="map-container">
           <WorldMap
             ref={svgRef}
-            highlightedZoneId={highlightedZone}
+            highlightedRegionId={highlightedZone}
           />
-          {showHint && target && (
-            <div
-              className="hint-arrow"
-              style={{
-                position: 'absolute',
-                left: `calc(${(target.dropZone.cx / 800) * 100}% - 8px)`,
-                top: `calc(${(target.dropZone.cy / 450) * 100}% - 32px)`,
-              }}
-              aria-hidden="true"
-            >
-              ↓
-            </div>
-          )}
+          {showHint && target && (() => {
+            const [hx, hy] = geoToSvg(target.geo.lon, target.geo.lat)
+            return (
+              <div
+                className="hint-arrow"
+                style={{
+                  position: 'absolute',
+                  left: `${(hx / 800) * 100}%`,
+                  top: `${(hy / 450) * 100}%`,
+                  transform: 'translate(-50%, -100%)',
+                }}
+                aria-hidden="true"
+              >
+                ↓
+              </div>
+            )
+          })()}
         </div>
 
         <div className="chip-area">
