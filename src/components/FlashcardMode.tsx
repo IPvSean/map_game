@@ -15,7 +15,12 @@ type AnswerState = 'default' | 'correct' | 'wrong'
 
 export function FlashcardMode({ onBack }: FlashcardModeProps) {
   const session = useQuizSession(regions)
-  const choices = useDistractors(session.currentQuestion, regions)
+  const [choiceShuffleKey, setChoiceShuffleKey] = useState(0)
+  const choices = useDistractors(
+    session.currentQuestion,
+    regions,
+    session.currentIndex * 1000 + choiceShuffleKey,
+  )
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [feedback, setFeedback] = useState<string | null>(null)
   const [locked, setLocked] = useState(false)
@@ -41,6 +46,7 @@ export function FlashcardMode({ onBack }: FlashcardModeProps) {
         setAnswerStates({ [regionId]: 'wrong' })
         setFeedback('Almost — try again!')
         session.markWrong()
+        setChoiceShuffleKey((key) => key + 1)
         setTimeout(() => {
           setAnswerStates({})
           setFeedback(null)
