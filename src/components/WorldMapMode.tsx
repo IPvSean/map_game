@@ -49,6 +49,7 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const lastPointerRef = useRef<{ x: number; y: number } | null>(null)
   const [highlightedZone, setHighlightedZone] = useState<string | null>(null)
+  const [showCorrect, setShowCorrect] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [returning, setReturning] = useState(false)
   const [missesOnQuestion, setMissesOnQuestion] = useState(0)
@@ -96,17 +97,17 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
       if (droppedRegion?.id === session.currentQuestion.id) {
         setAdvancing(true)
         setHighlightedZone(session.currentQuestion.id)
-        setFeedback('Great job!')
+        setShowCorrect(true)
         session.markCorrect()
 
         setTimeout(() => {
           setHighlightedZone(null)
-          setFeedback(null)
+          setShowCorrect(false)
           setMissesOnQuestion(0)
           setShowHint(false)
           setAdvancing(false)
           session.next()
-        }, 1200)
+        }, 1500)
       } else {
         setReturning(true)
         setFeedback('Try again — drag to the right spot!')
@@ -199,9 +200,7 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
         <ProgressBar current={session.currentIndex} total={session.totalQuestions} />
 
         {feedback && (
-          <div
-            className={`feedback-banner ${feedback.includes('Great') ? 'success' : 'error'}`}
-          >
+          <div className="feedback-banner error">
             {feedback}
           </div>
         )}
@@ -228,6 +227,15 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
             hoveredRegionId={hoveredRegionId}
             showDropZones={isDragging}
           />
+          {showCorrect && (
+            <div className="correct-overlay" aria-live="polite" role="status">
+              <div className="correct-burst">
+                <span className="correct-spark" aria-hidden="true">★</span>
+                <p className="correct-text">CORRECT!</p>
+                <span className="correct-spark" aria-hidden="true">★</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="chip-area">
