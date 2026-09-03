@@ -123,11 +123,6 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
               regionId &&
               isCountryInRegion(name, highlightedRegionId)
 
-            const isHovered =
-              hoveredRegionId &&
-              regionId &&
-              isCountryInRegion(name, hoveredRegionId)
-
             const isHinted =
               hintRegionId &&
               regionId &&
@@ -149,14 +144,12 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
                     ? landHighlight
                     : isHinted
                       ? '#f5a623'
-                      : isHovered
-                        ? '#ffe082'
-                        : dimmed
-                          ? '#a5c99a'
-                          : '#8bc34a'
+                      : dimmed
+                        ? '#a5c99a'
+                        : '#8bc34a'
                 }
-                stroke={isHinted || isHovered ? '#f5a623' : '#4a7a3a'}
-                strokeWidth={isHinted || isHovered ? 1.2 : 0.6}
+                stroke={isHinted ? '#f5a623' : '#4a7a3a'}
+                strokeWidth={isHinted ? 1.2 : 0.6}
                 opacity={dimmed && !isHinted ? 0.55 : 1}
               />
             )

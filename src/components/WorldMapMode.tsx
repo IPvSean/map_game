@@ -109,11 +109,7 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
         }, 1200)
       } else {
         setReturning(true)
-        setFeedback(
-          droppedRegion
-            ? `That's ${droppedRegion.name} — try again!`
-            : 'Try again — drag to the right spot!',
-        )
+        setFeedback('Try again — drag to the right spot!')
         session.markWrong()
         const newMisses = missesOnQuestion + 1
         setMissesOnQuestion(newMisses)
@@ -230,7 +226,7 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
             highlightedRegionId={highlightedZone}
             hintRegionId={showHint ? target?.id : null}
             hoveredRegionId={hoveredRegionId}
-            showDropZones={isDragging || showHint}
+            showDropZones={isDragging}
           />
         </div>
 
