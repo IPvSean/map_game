@@ -1,5 +1,3 @@
-import { geoRadiusToSvg, geoToSvg } from './mapProjection'
-
 export type RegionType = 'continent' | 'ocean' | 'sea' | 'region'
 
 export interface GeoZone {
@@ -17,12 +15,12 @@ export interface Region {
 
 export const regions: Region[] = [
   { id: 'antarctica', name: 'Antarctica', type: 'continent', geo: { lon: 0, lat: -78, radius: 18 } },
-  { id: 'caribbean-islands', name: 'Caribbean Islands', type: 'region', geo: { lon: -72, lat: 18, radius: 9 } },
+  { id: 'caribbean-islands', name: 'Caribbean Islands', type: 'region', geo: { lon: -72, lat: 20, radius: 10 } },
   { id: 'mediterranean-sea', name: 'Mediterranean Sea', type: 'sea', geo: { lon: 18, lat: 38, radius: 11 } },
   { id: 'southeast-asia', name: 'Southeast Asia', type: 'region', geo: { lon: 110, lat: 8, radius: 14 } },
   { id: 'atlantic-ocean', name: 'Atlantic Ocean', type: 'ocean', geo: { lon: -35, lat: 20, radius: 22 } },
   { id: 'oceania', name: 'Oceania', type: 'region', geo: { lon: 165, lat: -10, radius: 16 } },
-  { id: 'caribbean-sea', name: 'Caribbean Sea', type: 'sea', geo: { lon: -78, lat: 15, radius: 9 } },
+  { id: 'caribbean-sea', name: 'Caribbean Sea', type: 'sea', geo: { lon: -69, lat: 17, radius: 12 } },
   { id: 'southern-ocean', name: 'Southern Ocean', type: 'ocean', geo: { lon: 0, lat: -58, radius: 20 } },
   { id: 'pacific-ocean', name: 'Pacific Ocean', type: 'ocean', geo: { lon: -155, lat: 5, radius: 28 } },
   { id: 'europe', name: 'Europe', type: 'continent', geo: { lon: 15, lat: 52, radius: 14 } },
@@ -37,37 +35,8 @@ export const regions: Region[] = [
   { id: 'africa', name: 'Africa', type: 'continent', geo: { lon: 20, lat: 2, radius: 18 } },
 ]
 
-/** Smaller / more specific zones first so drops resolve correctly. */
-const REGION_MATCH_ORDER = [...regions].sort((a, b) => a.geo.radius - b.geo.radius)
-
 export function getRegionById(id: string): Region | undefined {
   return regions.find((r) => r.id === id)
-}
-
-function geoDistance(lon1: number, lat1: number, lon2: number, lat2: number): number {
-  return Math.hypot(lon1 - lon2, lat1 - lat2)
-}
-
-/** Match drops using projected SVG coords so hit areas align with the map. */
-export function findRegionAtSvg(svgX: number, svgY: number): Region | undefined {
-  for (const region of REGION_MATCH_ORDER) {
-    const [cx, cy] = geoToSvg(region.geo.lon, region.geo.lat)
-    const r = geoRadiusToSvg(region.geo.lon, region.geo.lat, region.geo.radius)
-    if (Math.hypot(svgX - cx, svgY - cy) <= r) {
-      return region
-    }
-  }
-  return undefined
-}
-
-export function findRegionAtGeo(lon: number, lat: number): Region | undefined {
-  for (const region of REGION_MATCH_ORDER) {
-    const { lon: cx, lat: cy, radius } = region.geo
-    if (geoDistance(lon, lat, cx, cy) <= radius) {
-      return region
-    }
-  }
-  return undefined
 }
 
 export function screenToSvgCoords(

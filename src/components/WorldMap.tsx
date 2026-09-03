@@ -1,70 +1,73 @@
-import { forwardRef, useMemo } from 'react'
-import { feature } from 'topojson-client'
-import type { FeatureCollection, Geometry } from 'geojson'
-import type { Topology } from 'topojson-specification'
-import countriesTopology from 'world-atlas/countries-110m.json'
+import { forwardRef } from 'react'
 import {
-  geoPathGenerator,
   geoRadiusToSvg,
   geoToSvg,
   MAP_VIEWBOX,
   projection,
 } from '../data/mapProjection'
+import { getDropZoneCircles } from '../data/mapHitTest'
+import { getCountryPaths } from '../data/countryPaths'
 import {
-  getRegionForCountry,
   isCountryInRegion,
   WATER_REGIONS,
 } from '../data/regionGeography'
-import { getRegionById, regions } from '../data/regions'
+import { getRegionById } from '../data/regions'
 
 interface WorldMapProps {
   highlightedRegionId?: string | null
   hintRegionId?: string | null
-  highlightMode?: 'prompt' | 'success'
+  hoveredRegionId?: string | null
   showDropZones?: boolean
+  highlightMode?: 'prompt' | 'success'
 }
 
 function GeoHighlight({
-  lon,
-  lat,
-  radius,
+  cx,
+  cy,
+  r,
   fill,
   stroke,
+  strokeWidth = 2.5,
+  strokeDasharray,
+  pulse = false,
 }: {
-  lon: number
-  lat: number
-  radius: number
+  cx: number
+  cy: number
+  r: number
   fill: string
   stroke: string
+  strokeWidth?: number
+  strokeDasharray?: string
+  pulse?: boolean
 }) {
-  const [cx, cy] = geoToSvg(lon, lat)
-  const r = geoRadiusToSvg(lon, lat, radius)
-  return <circle cx={cx} cy={cy} r={r} fill={fill} stroke={stroke} strokeWidth={2.5} />
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={r}
+      fill={fill}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      strokeDasharray={strokeDasharray}
+      className={pulse ? 'drop-zone-pulse' : undefined}
+    />
+  )
 }
 
 export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
-  function WorldMap({ highlightedRegionId, hintRegionId, highlightMode = 'success', showDropZones = false }, ref) {
+  function WorldMap({
+    highlightedRegionId,
+    hintRegionId,
+    hoveredRegionId,
+    highlightMode = 'success',
+    showDropZones = false,
+  }, ref) {
     const highlightFill = highlightMode === 'prompt' ? '#f5a62355' : '#4caf5055'
     const highlightStroke = highlightMode === 'prompt' ? '#f5a623' : '#4caf50'
     const landHighlight = highlightMode === 'prompt' ? '#f5a623' : '#66bb6a'
 
-    const countryPaths = useMemo(() => {
-      const topo = countriesTopology as unknown as Topology
-      const collection = feature(
-        topo,
-        topo.objects.countries as Topology['objects'][string],
-      ) as FeatureCollection<Geometry>
-
-      return collection.features
-        .map((f) => {
-          const name = f.properties?.name as string | undefined
-          if (!name) return null
-          const d = geoPathGenerator(f)
-          if (!d) return null
-          return { name, d, regionId: getRegionForCountry(name) }
-        })
-        .filter((x): x is NonNullable<typeof x> => x !== null)
-    }, [])
+    const countryPaths = getCountryPaths()
+    const dropZones = getDropZoneCircles()
 
     const highlightedRegion = highlightedRegionId
       ? getRegionById(highlightedRegionId)
@@ -78,10 +81,8 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
         viewBox={`0 0 ${MAP_VIEWBOX.width} ${MAP_VIEWBOX.height}`}
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Ocean */}
         <rect width={MAP_VIEWBOX.width} height={MAP_VIEWBOX.height} fill="#7ec8e8" />
 
-        {/* Graticule lines for map readability */}
         {[-120, -60, 0, 60, 120].map((lon) => {
           const [x1, y1] = geoToSvg(lon, -60)
           const [x2, y2] = geoToSvg(lon, 75)
@@ -115,7 +116,6 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
           )
         })}
 
-        {/* Country landmasses */}
         <g>
           {countryPaths.map(({ name, d, regionId }) => {
             const isHighlighted =
@@ -123,94 +123,123 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
               regionId &&
               isCountryInRegion(name, highlightedRegionId)
 
+            const isHovered =
+              hoveredRegionId &&
+              regionId &&
+              isCountryInRegion(name, hoveredRegionId)
+
             const dimmed = highlightedRegionId && !isHighlighted
 
             return (
               <path
                 key={name}
-                id={regionId ? `zone-${regionId}` : undefined}
+                data-country={name}
+                data-region={regionId}
                 d={d}
                 fill={
                   isHighlighted
                     ? landHighlight
-                    : dimmed
-                      ? '#a5c99a'
-                      : '#8bc34a'
+                    : isHovered
+                      ? '#ffe082'
+                      : dimmed
+                        ? '#a5c99a'
+                        : '#8bc34a'
                 }
-                stroke="#4a7a3a"
-                strokeWidth={0.6}
+                stroke={isHovered ? '#f5a623' : '#4a7a3a'}
+                strokeWidth={isHovered ? 1.2 : 0.6}
                 opacity={dimmed ? 0.55 : 1}
               />
             )
           })}
         </g>
 
-        {/* Water region highlights (oceans & seas) */}
-        {highlightedRegion && WATER_REGIONS.has(highlightedRegion.id) && (
+        {/* Drop zone circles — visible while dragging */}
+        {showDropZones &&
+          dropZones.map(({ region, cx, cy, r, isWater }) => {
+            const isHovered = hoveredRegionId === region.id
+            const isHint = hintRegionId === region.id
+            const isTarget = highlightedRegionId === region.id
+
+            return (
+              <GeoHighlight
+                key={region.id}
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill={
+                  isHovered
+                    ? '#f5a62366'
+                    : isHint
+                      ? '#f5a62333'
+                      : isTarget
+                        ? highlightFill
+                        : isWater
+                          ? '#ffffff22'
+                          : '#ffffff18'
+                }
+                stroke={
+                  isHovered || isHint
+                    ? '#f5a623'
+                    : isTarget
+                      ? highlightStroke
+                      : isWater
+                        ? '#4a90d988'
+                        : '#ffffff55'
+                }
+                strokeWidth={isHovered || isHint ? 3 : 1.5}
+                strokeDasharray={isWater ? '6 4' : '4 3'}
+                pulse={isHovered}
+              />
+            )
+          })}
+
+        {/* Water region success highlight */}
+        {highlightedRegion && WATER_REGIONS.has(highlightedRegion.id) && !showDropZones && (
           <GeoHighlight
-            lon={highlightedRegion.geo.lon}
-            lat={highlightedRegion.geo.lat}
-            radius={highlightedRegion.geo.radius}
+            cx={geoToSvg(highlightedRegion.geo.lon, highlightedRegion.geo.lat)[0]}
+            cy={geoToSvg(highlightedRegion.geo.lon, highlightedRegion.geo.lat)[1]}
+            r={geoRadiusToSvg(
+              highlightedRegion.geo.lon,
+              highlightedRegion.geo.lat,
+              highlightedRegion.geo.radius,
+            )}
             fill={highlightFill}
             stroke={highlightStroke}
           />
         )}
 
-        {/* Hint arrow for water/small regions */}
-        {hintRegion && (
+        {/* Hint target (when not already showing all zones) */}
+        {hintRegion && !showDropZones && (
           <g aria-hidden="true">
-            {(() => {
-              const [hx, hy] = geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)
-              const r = geoRadiusToSvg(hintRegion.geo.lon, hintRegion.geo.lat, hintRegion.geo.radius)
-              return (
-                <>
-                  <circle
-                    cx={hx}
-                    cy={hy}
-                    r={r}
-                    fill="#f5a62333"
-                    stroke="#f5a623"
-                    strokeWidth={2}
-                    strokeDasharray="6 4"
-                  />
-                  <text
-                    x={hx}
-                    y={hy - r - 8}
-                    textAnchor="middle"
-                    fontSize={28}
-                    fill="#f5a623"
-                  >
-                    ↓
-                  </text>
-                </>
-              )
-            })()}
+            <GeoHighlight
+              cx={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[0]}
+              cy={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[1]}
+              r={geoRadiusToSvg(
+                hintRegion.geo.lon,
+                hintRegion.geo.lat,
+                hintRegion.geo.radius,
+              )}
+              fill="#f5a62344"
+              stroke="#f5a623"
+              strokeWidth={2.5}
+              strokeDasharray="6 4"
+              pulse
+            />
+            <text
+              x={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[0]}
+              y={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[1] + 6}
+              textAnchor="middle"
+              fontSize={22}
+              fill="#f5a623"
+              fontWeight="bold"
+            >
+              ▼
+            </text>
           </g>
         )}
-
-        {/* Debug drop zones */}
-        {showDropZones &&
-          regions.map((region) => {
-            const [cx, cy] = geoToSvg(region.geo.lon, region.geo.lat)
-            const r = geoRadiusToSvg(region.geo.lon, region.geo.lat, region.geo.radius)
-            return (
-              <circle
-                key={region.id}
-                cx={cx}
-                cy={cy}
-                r={r}
-                fill="none"
-                stroke="red"
-                strokeWidth={1}
-                strokeDasharray="4 2"
-                opacity={0.4}
-              />
-            )
-          })}
       </svg>
     )
   },
 )
 
-// Export projection for coordinate conversion in drag handler
 export { projection }

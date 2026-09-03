@@ -5,9 +5,12 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragMoveEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
 import { useCallback, useRef, useState } from 'react'
-import { findRegionAtSvg, regions, screenToSvgCoords } from '../data/regions'
+import { findRegionAtDrop } from '../data/mapHitTest'
+import { regions, screenToSvgCoords } from '../data/regions'
 import { useQuizSession } from '../hooks/useQuizSession'
 import { DraggableChip } from './DraggableChip'
 import { ProgressBar } from './ProgressBar'
@@ -20,6 +23,12 @@ interface WorldMapModeProps {
 
 const CHIP_ID = 'region-chip'
 
+function pointerFromDragEvent(event: DragMoveEvent | DragEndEvent): { x: number; y: number } | null {
+  const rect = event.active.rect.current.translated
+  if (!rect) return null
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+}
+
 export function WorldMapMode({ onBack }: WorldMapModeProps) {
   const session = useQuizSession(regions)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -29,27 +38,49 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
   const [missesOnQuestion, setMissesOnQuestion] = useState(0)
   const [showHint, setShowHint] = useState(false)
   const [advancing, setAdvancing] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }),
   )
 
+  const updateHoverFromDrag = useCallback((event: DragMoveEvent | DragEndEvent) => {
+    if (!svgRef.current) return
+    const pointer = pointerFromDragEvent(event)
+    if (!pointer) return
+    const svgCoords = screenToSvgCoords(svgRef.current, pointer.x, pointer.y)
+    const region = findRegionAtDrop(svgRef.current, svgCoords.x, svgCoords.y)
+    setHoveredRegionId(region?.id ?? null)
+  }, [])
+
+  const handleDragStart = useCallback((_event: DragStartEvent) => {
+    setIsDragging(true)
+  }, [])
+
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      updateHoverFromDrag(event)
+    },
+    [updateHoverFromDrag],
+  )
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      setIsDragging(false)
+      setHoveredRegionId(null)
+
       if (advancing || !session.currentQuestion || !svgRef.current) return
 
       const { active } = event
       if (active.id !== CHIP_ID) return
 
-      const rect = active.rect.current.translated
-      if (!rect) return
+      const pointer = pointerFromDragEvent(event)
+      if (!pointer) return
 
-      const centerX = rect.left + rect.width / 2
-      const centerY = rect.top + rect.height / 2
-
-      const svgCoords = screenToSvgCoords(svgRef.current, centerX, centerY)
-      const droppedRegion = findRegionAtSvg(svgCoords.x, svgCoords.y)
+      const svgCoords = screenToSvgCoords(svgRef.current, pointer.x, pointer.y)
+      const droppedRegion = findRegionAtDrop(svgRef.current, svgCoords.x, svgCoords.y)
 
       if (droppedRegion?.id === session.currentQuestion.id) {
         setAdvancing(true)
@@ -83,6 +114,11 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
     [advancing, session, missesOnQuestion],
   )
 
+  const handleDragCancel = useCallback(() => {
+    setIsDragging(false)
+    setHoveredRegionId(null)
+  }, [])
+
   if (session.isComplete) {
     return (
       <>
@@ -106,7 +142,13 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
   const target = session.currentQuestion
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
+    >
       <div className="map-screen">
         <div className="screen-header">
           <button type="button" className="back-btn" onClick={onBack} aria-label="Back">
@@ -131,11 +173,21 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
           {' '}on the map
         </div>
 
+        {isDragging && (
+          <p className="map-drag-hint">
+            {hoveredRegionId
+              ? `Over: ${getRegionLabel(hoveredRegionId)}`
+              : 'Drag over a glowing zone on the map'}
+          </p>
+        )}
+
         <div className="map-container">
           <WorldMap
             ref={svgRef}
             highlightedRegionId={highlightedZone}
             hintRegionId={showHint ? target?.id : null}
+            hoveredRegionId={hoveredRegionId}
+            showDropZones={isDragging || showHint}
           />
         </div>
 
@@ -151,4 +203,8 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
       </div>
     </DndContext>
   )
+}
+
+function getRegionLabel(id: string): string {
+  return regions.find((r) => r.id === id)?.name ?? id
 }
