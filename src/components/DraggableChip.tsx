@@ -11,8 +11,11 @@ export function DraggableChip({ label, id, returning }: DraggableChipProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({ id })
 
+  const translate = CSS.Translate.toString(transform)
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: translate
+      ? `${translate} scale(${isDragging ? 0.14 : 1})`
+      : undefined,
   }
 
   return (
@@ -20,10 +23,11 @@ export function DraggableChip({ label, id, returning }: DraggableChipProps) {
       ref={setNodeRef}
       style={style}
       className={`draggable-chip${isDragging ? ' dragging' : ''}${returning ? ' returning' : ''}`}
+      aria-label={isDragging ? `Placing ${label}` : label}
       {...listeners}
       {...attributes}
     >
-      {label}
+      {!isDragging && label}
     </div>
   )
 }
