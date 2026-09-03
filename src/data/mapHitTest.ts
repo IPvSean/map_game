@@ -1,6 +1,5 @@
 import { geoRadiusToSvg, geoToSvg } from './mapProjection'
 import { WATER_REGIONS } from './regionGeography'
-import { getCountryPaths } from './countryPaths'
 import { getRegionById, regions, type Region } from './regions'
 
 const REGION_MATCH_ORDER = [...regions].sort((a, b) => a.geo.radius - b.geo.radius)
@@ -19,14 +18,14 @@ function hitCountry(svg: SVGSVGElement, svgX: number, svgY: number): Region | un
   pt.x = svgX
   pt.y = svgY
 
-  for (const { d, regionId } of getCountryPaths()) {
-    if (!regionId) continue
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-    path.setAttribute('d', d)
+  const paths = svg.querySelectorAll<SVGPathElement>('path[data-region]')
+  for (const path of paths) {
     if (path.isPointInFill(pt)) {
-      return getRegionById(regionId)
+      const regionId = path.getAttribute('data-region')
+      if (regionId) return getRegionById(regionId)
     }
   }
+
   return undefined
 }
 

@@ -4,6 +4,7 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  type DragCancelEvent,
   type DragEndEvent,
   type DragMoveEvent,
   type DragStartEvent,
@@ -23,15 +24,30 @@ interface WorldMapModeProps {
 
 const CHIP_ID = 'region-chip'
 
-function pointerFromDragEvent(event: DragMoveEvent | DragEndEvent): { x: number; y: number } | null {
-  const rect = event.active.rect.current.translated
-  if (!rect) return null
-  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+function pointerFromDragEvent(event: DragMoveEvent | DragEndEvent | DragCancelEvent): { x: number; y: number } | null {
+  const translated = event.active.rect.current.translated
+  if (translated) {
+    return {
+      x: translated.left + translated.width / 2,
+      y: translated.top + translated.height / 2,
+    }
+  }
+
+  const initial = event.active.rect.current.initial
+  if (initial) {
+    return {
+      x: initial.left + initial.width / 2 + event.delta.x,
+      y: initial.top + initial.height / 2 + event.delta.y,
+    }
+  }
+
+  return null
 }
 
 export function WorldMapMode({ onBack }: WorldMapModeProps) {
   const session = useQuizSession(regions)
   const svgRef = useRef<SVGSVGElement>(null)
+  const lastPointerRef = useRef<{ x: number; y: number } | null>(null)
   const [highlightedZone, setHighlightedZone] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [returning, setReturning] = useState(false)
@@ -46,38 +62,33 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
     useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }),
   )
 
-  const updateHoverFromDrag = useCallback((event: DragMoveEvent | DragEndEvent) => {
+  const resolvePointer = useCallback((event: DragMoveEvent | DragEndEvent | DragCancelEvent) => {
+    return pointerFromDragEvent(event) ?? lastPointerRef.current
+  }, [])
+
+  const updateHoverFromDrag = useCallback((event: DragMoveEvent | DragEndEvent | DragCancelEvent) => {
     if (!svgRef.current) return
-    const pointer = pointerFromDragEvent(event)
+    const pointer = resolvePointer(event)
     if (!pointer) return
+    lastPointerRef.current = pointer
     const svgCoords = screenToSvgCoords(svgRef.current, pointer.x, pointer.y)
     const region = findRegionAtDrop(svgRef.current, svgCoords.x, svgCoords.y)
     setHoveredRegionId(region?.id ?? null)
-  }, [])
+  }, [resolvePointer])
 
-  const handleDragStart = useCallback((_event: DragStartEvent) => {
-    setIsDragging(true)
-  }, [])
-
-  const handleDragMove = useCallback(
-    (event: DragMoveEvent) => {
-      updateHoverFromDrag(event)
-    },
-    [updateHoverFromDrag],
-  )
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      setIsDragging(false)
-      setHoveredRegionId(null)
-
+  const processDrop = useCallback(
+    (event: DragEndEvent | DragCancelEvent) => {
       if (advancing || !session.currentQuestion || !svgRef.current) return
 
       const { active } = event
       if (active.id !== CHIP_ID) return
 
-      const pointer = pointerFromDragEvent(event)
-      if (!pointer) return
+      const pointer = resolvePointer(event)
+      if (!pointer) {
+        setFeedback('Drop on the map!')
+        setTimeout(() => setFeedback(null), 800)
+        return
+      }
 
       const svgCoords = screenToSvgCoords(svgRef.current, pointer.x, pointer.y)
       const droppedRegion = findRegionAtDrop(svgRef.current, svgCoords.x, svgCoords.y)
@@ -98,7 +109,11 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
         }, 1200)
       } else {
         setReturning(true)
-        setFeedback('Try again — drag to the right spot!')
+        setFeedback(
+          droppedRegion
+            ? `That's ${droppedRegion.name} — try again!`
+            : 'Try again — drag to the right spot!',
+        )
         session.markWrong()
         const newMisses = missesOnQuestion + 1
         setMissesOnQuestion(newMisses)
@@ -108,16 +123,44 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
         setTimeout(() => {
           setReturning(false)
           setFeedback(null)
-        }, 600)
+        }, 800)
       }
     },
-    [advancing, session, missesOnQuestion],
+    [advancing, session, missesOnQuestion, resolvePointer],
   )
 
-  const handleDragCancel = useCallback(() => {
-    setIsDragging(false)
-    setHoveredRegionId(null)
+  const handleDragStart = useCallback((_event: DragStartEvent) => {
+    lastPointerRef.current = null
+    setIsDragging(true)
   }, [])
+
+  const handleDragMove = useCallback(
+    (event: DragMoveEvent) => {
+      updateHoverFromDrag(event)
+    },
+    [updateHoverFromDrag],
+  )
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setIsDragging(false)
+      setHoveredRegionId(null)
+      processDrop(event)
+    },
+    [processDrop],
+  )
+
+  const handleDragCancel = useCallback(
+    (event: DragCancelEvent) => {
+      setIsDragging(false)
+      setHoveredRegionId(null)
+      // Touch releases often cancel instead of ending — still score the drop
+      if (lastPointerRef.current) {
+        processDrop(event)
+      }
+    },
+    [processDrop],
+  )
 
   if (session.isComplete) {
     return (
