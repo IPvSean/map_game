@@ -1,3 +1,5 @@
+import { geoRadiusToSvg, geoToSvg } from './mapProjection'
+
 export type RegionType = 'continent' | 'ocean' | 'sea' | 'region'
 
 export interface GeoZone {
@@ -27,7 +29,7 @@ export const regions: Region[] = [
   { id: 'middle-east', name: 'Middle East', type: 'region', geo: { lon: 45, lat: 28, radius: 12 } },
   { id: 'australia', name: 'Australia', type: 'continent', geo: { lon: 134, lat: -25, radius: 12 } },
   { id: 'central-america', name: 'Central America', type: 'region', geo: { lon: -87, lat: 14, radius: 7 } },
-  { id: 'gulf-of-mexico', name: 'Gulf of Mexico', type: 'sea', geo: { lon: -90, lat: 25, radius: 8 } },
+  { id: 'gulf-of-mexico', name: 'Gulf of Mexico', type: 'sea', geo: { lon: -88.5, lat: 26, radius: 10 } },
   { id: 'north-america', name: 'North America', type: 'continent', geo: { lon: -100, lat: 48, radius: 18 } },
   { id: 'south-america', name: 'South America', type: 'continent', geo: { lon: -58, lat: -15, radius: 16 } },
   { id: 'asia', name: 'Asia', type: 'continent', geo: { lon: 85, lat: 45, radius: 22 } },
@@ -44,6 +46,18 @@ export function getRegionById(id: string): Region | undefined {
 
 function geoDistance(lon1: number, lat1: number, lon2: number, lat2: number): number {
   return Math.hypot(lon1 - lon2, lat1 - lat2)
+}
+
+/** Match drops using projected SVG coords so hit areas align with the map. */
+export function findRegionAtSvg(svgX: number, svgY: number): Region | undefined {
+  for (const region of REGION_MATCH_ORDER) {
+    const [cx, cy] = geoToSvg(region.geo.lon, region.geo.lat)
+    const r = geoRadiusToSvg(region.geo.lon, region.geo.lat, region.geo.radius)
+    if (Math.hypot(svgX - cx, svgY - cy) <= r) {
+      return region
+    }
+  }
+  return undefined
 }
 
 export function findRegionAtGeo(lon: number, lat: number): Region | undefined {

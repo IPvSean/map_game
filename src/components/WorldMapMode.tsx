@@ -7,8 +7,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { useCallback, useRef, useState } from 'react'
-import { geoToSvg, svgToGeo } from '../data/mapProjection'
-import { findRegionAtGeo, regions, screenToSvgCoords } from '../data/regions'
+import { findRegionAtSvg, regions, screenToSvgCoords } from '../data/regions'
 import { useQuizSession } from '../hooks/useQuizSession'
 import { DraggableChip } from './DraggableChip'
 import { ProgressBar } from './ProgressBar'
@@ -50,8 +49,7 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
       const centerY = rect.top + rect.height / 2
 
       const svgCoords = screenToSvgCoords(svgRef.current, centerX, centerY)
-      const [lon, lat] = svgToGeo(svgCoords.x, svgCoords.y)
-      const droppedRegion = findRegionAtGeo(lon, lat)
+      const droppedRegion = findRegionAtSvg(svgCoords.x, svgCoords.y)
 
       if (droppedRegion?.id === session.currentQuestion.id) {
         setAdvancing(true)
@@ -137,24 +135,8 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
           <WorldMap
             ref={svgRef}
             highlightedRegionId={highlightedZone}
+            hintRegionId={showHint ? target?.id : null}
           />
-          {showHint && target && (() => {
-            const [hx, hy] = geoToSvg(target.geo.lon, target.geo.lat)
-            return (
-              <div
-                className="hint-arrow"
-                style={{
-                  position: 'absolute',
-                  left: `${(hx / 800) * 100}%`,
-                  top: `${(hy / 450) * 100}%`,
-                  transform: 'translate(-50%, -100%)',
-                }}
-                aria-hidden="true"
-              >
-                ↓
-              </div>
-            )
-          })()}
         </div>
 
         <div className="chip-area">

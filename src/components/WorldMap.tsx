@@ -19,6 +19,7 @@ import { getRegionById, regions } from '../data/regions'
 
 interface WorldMapProps {
   highlightedRegionId?: string | null
+  hintRegionId?: string | null
   highlightMode?: 'prompt' | 'success'
   showDropZones?: boolean
 }
@@ -42,7 +43,7 @@ function GeoHighlight({
 }
 
 export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
-  function WorldMap({ highlightedRegionId, highlightMode = 'success', showDropZones = false }, ref) {
+  function WorldMap({ highlightedRegionId, hintRegionId, highlightMode = 'success', showDropZones = false }, ref) {
     const highlightFill = highlightMode === 'prompt' ? '#f5a62355' : '#4caf5055'
     const highlightStroke = highlightMode === 'prompt' ? '#f5a623' : '#4caf50'
     const landHighlight = highlightMode === 'prompt' ? '#f5a623' : '#66bb6a'
@@ -68,6 +69,8 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
     const highlightedRegion = highlightedRegionId
       ? getRegionById(highlightedRegionId)
       : null
+
+    const hintRegion = hintRegionId ? getRegionById(hintRegionId) : null
 
     return (
       <svg
@@ -151,6 +154,38 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
             fill={highlightFill}
             stroke={highlightStroke}
           />
+        )}
+
+        {/* Hint arrow for water/small regions */}
+        {hintRegion && (
+          <g aria-hidden="true">
+            {(() => {
+              const [hx, hy] = geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)
+              const r = geoRadiusToSvg(hintRegion.geo.lon, hintRegion.geo.lat, hintRegion.geo.radius)
+              return (
+                <>
+                  <circle
+                    cx={hx}
+                    cy={hy}
+                    r={r}
+                    fill="#f5a62333"
+                    stroke="#f5a623"
+                    strokeWidth={2}
+                    strokeDasharray="6 4"
+                  />
+                  <text
+                    x={hx}
+                    y={hy - r - 8}
+                    textAnchor="middle"
+                    fontSize={28}
+                    fill="#f5a623"
+                  >
+                    ↓
+                  </text>
+                </>
+              )
+            })()}
+          </g>
         )}
 
         {/* Debug drop zones */}
