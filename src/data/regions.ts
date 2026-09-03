@@ -19,7 +19,7 @@ export const regions: Region[] = [
   { id: 'mediterranean-sea', name: 'Mediterranean Sea', type: 'sea', geo: { lon: 18, lat: 38, radius: 11 } },
   { id: 'southeast-asia', name: 'Southeast Asia', type: 'region', geo: { lon: 110, lat: 8, radius: 14 } },
   { id: 'atlantic-ocean', name: 'Atlantic Ocean', type: 'ocean', geo: { lon: -35, lat: 20, radius: 22 } },
-  { id: 'oceania', name: 'Oceania', type: 'region', geo: { lon: 165, lat: -10, radius: 16 } },
+  { id: 'oceania', name: 'Oceania', type: 'region', geo: { lon: 168, lat: -22, radius: 5 } },
   { id: 'caribbean-sea', name: 'Caribbean Sea', type: 'sea', geo: { lon: -69, lat: 17, radius: 12 } },
   { id: 'southern-ocean', name: 'Southern Ocean', type: 'ocean', geo: { lon: 0, lat: -58, radius: 20 } },
   { id: 'pacific-ocean', name: 'Pacific Ocean', type: 'ocean', geo: { lon: -155, lat: 5, radius: 28 } },

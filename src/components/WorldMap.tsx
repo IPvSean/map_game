@@ -128,7 +128,15 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
               regionId &&
               isCountryInRegion(name, hoveredRegionId)
 
-            const dimmed = highlightedRegionId && !isHighlighted
+            const isHinted =
+              hintRegionId &&
+              regionId &&
+              !WATER_REGIONS.has(hintRegionId) &&
+              isCountryInRegion(name, hintRegionId)
+
+            const dimmed =
+              (highlightedRegionId && !isHighlighted) ||
+              (hintRegionId && !isHinted && !WATER_REGIONS.has(hintRegionId))
 
             return (
               <path
@@ -139,23 +147,25 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
                 fill={
                   isHighlighted
                     ? landHighlight
-                    : isHovered
-                      ? '#ffe082'
-                      : dimmed
-                        ? '#a5c99a'
-                        : '#8bc34a'
+                    : isHinted
+                      ? '#f5a623'
+                      : isHovered
+                        ? '#ffe082'
+                        : dimmed
+                          ? '#a5c99a'
+                          : '#8bc34a'
                 }
-                stroke={isHovered ? '#f5a623' : '#4a7a3a'}
-                strokeWidth={isHovered ? 1.2 : 0.6}
-                opacity={dimmed ? 0.55 : 1}
+                stroke={isHinted || isHovered ? '#f5a623' : '#4a7a3a'}
+                strokeWidth={isHinted || isHovered ? 1.2 : 0.6}
+                opacity={dimmed && !isHinted ? 0.55 : 1}
               />
             )
           })}
         </g>
 
-        {/* Drop zone circles — visible while dragging */}
+        {/* Drop zone circles — water/ocean only, visible while dragging */}
         {showDropZones &&
-          dropZones.map(({ region, cx, cy, r, isWater }) => {
+          dropZones.map(({ region, cx, cy, r }) => {
             const isHovered = hoveredRegionId === region.id
             const isHint = hintRegionId === region.id
             const isTarget = highlightedRegionId === region.id
@@ -173,21 +183,17 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
                       ? '#f5a62333'
                       : isTarget
                         ? highlightFill
-                        : isWater
-                          ? '#ffffff22'
-                          : '#ffffff18'
+                        : '#ffffff22'
                 }
                 stroke={
                   isHovered || isHint
                     ? '#f5a623'
                     : isTarget
                       ? highlightStroke
-                      : isWater
-                        ? '#4a90d988'
-                        : '#ffffff55'
+                      : '#4a90d988'
                 }
                 strokeWidth={isHovered || isHint ? 3 : 1.5}
-                strokeDasharray={isWater ? '6 4' : '4 3'}
+                strokeDasharray="6 4"
                 pulse={isHovered}
               />
             )
@@ -208,8 +214,8 @@ export const WorldMap = forwardRef<SVGSVGElement, WorldMapProps>(
           />
         )}
 
-        {/* Hint target (when not already showing all zones) */}
-        {hintRegion && !showDropZones && (
+        {/* Water region hint (land regions highlight countries above) */}
+        {hintRegion && !showDropZones && WATER_REGIONS.has(hintRegion.id) && (
           <g aria-hidden="true">
             <GeoHighlight
               cx={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[0]}

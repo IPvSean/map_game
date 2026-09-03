@@ -2,10 +2,9 @@ import { geoRadiusToSvg, geoToSvg } from './mapProjection'
 import { WATER_REGIONS } from './regionGeography'
 import { getRegionById, regions, type Region } from './regions'
 
-const REGION_MATCH_ORDER = [...regions].sort((a, b) => a.geo.radius - b.geo.radius)
-
-const WATER_MATCH_ORDER = REGION_MATCH_ORDER.filter((r) => WATER_REGIONS.has(r.id))
-const LAND_MATCH_ORDER = REGION_MATCH_ORDER.filter((r) => !WATER_REGIONS.has(r.id))
+const WATER_MATCH_ORDER = [...regions]
+  .filter((r) => WATER_REGIONS.has(r.id))
+  .sort((a, b) => a.geo.radius - b.geo.radius)
 
 function hitCircle(svgX: number, svgY: number, region: Region): boolean {
   const [cx, cy] = geoToSvg(region.geo.lon, region.geo.lat)
@@ -18,15 +17,21 @@ function hitCountry(svg: SVGSVGElement, svgX: number, svgY: number): Region | un
   pt.x = svgX
   pt.y = svgY
 
+  const hits: Array<{ regionId: string; area: number }> = []
+
   const paths = svg.querySelectorAll<SVGPathElement>('path[data-region]')
   for (const path of paths) {
-    if (path.isPointInFill(pt)) {
-      const regionId = path.getAttribute('data-region')
-      if (regionId) return getRegionById(regionId)
-    }
+    if (!path.isPointInFill(pt)) continue
+    const regionId = path.getAttribute('data-region')
+    if (!regionId) continue
+    const { width, height } = path.getBBox()
+    hits.push({ regionId, area: width * height })
   }
 
-  return undefined
+  if (hits.length === 0) return undefined
+
+  hits.sort((a, b) => a.area - b.area)
+  return getRegionById(hits[0].regionId)
 }
 
 /** Find which region the player is pointing at on the map. */
@@ -35,25 +40,15 @@ export function findRegionAtDrop(
   svgX: number,
   svgY: number,
 ): Region | undefined {
-  // Seas & oceans first (circular zones in open water)
+  // Seas & oceans — circular zones in open water
   for (const region of WATER_MATCH_ORDER) {
     if (hitCircle(svgX, svgY, region)) {
       return region
     }
   }
 
-  // Continents & land regions — match actual country shapes
-  const landHit = hitCountry(svg, svgX, svgY)
-  if (landHit) return landHit
-
-  // Fallback to center circles for land regions
-  for (const region of LAND_MATCH_ORDER) {
-    if (hitCircle(svgX, svgY, region)) {
-      return region
-    }
-  }
-
-  return undefined
+  // Land regions — match actual country/island shapes only
+  return hitCountry(svg, svgX, svgY)
 }
 
 export function getDropZoneCircles(): Array<{
@@ -61,11 +56,10 @@ export function getDropZoneCircles(): Array<{
   cx: number
   cy: number
   r: number
-  isWater: boolean
 }> {
-  return regions.map((region) => {
+  return WATER_MATCH_ORDER.map((region) => {
     const [cx, cy] = geoToSvg(region.geo.lon, region.geo.lat)
     const r = geoRadiusToSvg(region.geo.lon, region.geo.lat, region.geo.radius)
-    return { region, cx, cy, r, isWater: WATER_REGIONS.has(region.id) }
+    return { region, cx, cy, r }
   })
 }
