@@ -219,8 +219,8 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
         {isDragging && (
           <p className="map-drag-hint">
             {hoveredRegionId
-              ? `Over: ${getRegionLabel(hoveredRegionId)}`
-              : 'Drag over a glowing zone on the map'}
+              ? 'Release to drop'
+              : 'Drag to a glowing zone on the map'}
           </p>
         )}
 
@@ -246,8 +246,4 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
       </div>
     </DndContext>
   )
-}
-
-function getRegionLabel(id: string): string {
-  return regions.find((r) => r.id === id)?.name ?? id
 }
