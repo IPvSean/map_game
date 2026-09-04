@@ -1,5 +1,6 @@
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   TouchSensor,
   useSensor,
@@ -9,10 +10,12 @@ import {
   type DragMoveEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
+import { snapCenterToCursor } from '@dnd-kit/modifiers'
 import { useCallback, useRef, useState } from 'react'
 import { findRegionAtDrop } from '../data/mapHitTest'
 import { regions, screenToSvgCoords } from '../data/regions'
 import { useQuizSession } from '../hooks/useQuizSession'
+import { DragPin } from './DragPin'
 import { DraggableChip } from './DraggableChip'
 import { ProgressBar } from './ProgressBar'
 import { ResultsScreen } from './ResultsScreen'
@@ -25,6 +28,25 @@ interface WorldMapModeProps {
 const CHIP_ID = 'region-chip'
 
 function pointerFromDragEvent(event: DragMoveEvent | DragEndEvent | DragCancelEvent): { x: number; y: number } | null {
+  const activator = event.activatorEvent
+
+  if (activator instanceof MouseEvent) {
+    return {
+      x: activator.clientX + event.delta.x,
+      y: activator.clientY + event.delta.y,
+    }
+  }
+
+  if (activator instanceof TouchEvent) {
+    const touch = activator.touches[0] ?? activator.changedTouches[0]
+    if (touch) {
+      return {
+        x: touch.clientX + event.delta.x,
+        y: touch.clientY + event.delta.y,
+      }
+    }
+  }
+
   const translated = event.active.rect.current.translated
   if (translated) {
     return {
@@ -56,6 +78,7 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
   const [showHint, setShowHint] = useState(false)
   const [advancing, setAdvancing] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [hoveredRegionId, setHoveredRegionId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -126,9 +149,10 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
     [advancing, session, missesOnQuestion, resolvePointer],
   )
 
-  const handleDragStart = useCallback((_event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     lastPointerRef.current = null
     setIsDragging(true)
+    setActiveDragId(String(event.active.id))
   }, [])
 
   const handleDragMove = useCallback(
@@ -138,25 +162,29 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
     [updateHoverFromDrag],
   )
 
+  const endDrag = useCallback(() => {
+    setIsDragging(false)
+    setActiveDragId(null)
+    setHoveredRegionId(null)
+  }, [])
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      setIsDragging(false)
-      setHoveredRegionId(null)
+      endDrag()
       processDrop(event)
     },
-    [processDrop],
+    [processDrop, endDrag],
   )
 
   const handleDragCancel = useCallback(
     (event: DragCancelEvent) => {
-      setIsDragging(false)
-      setHoveredRegionId(null)
+      endDrag()
       // Touch releases often cancel instead of ending — still score the drop
       if (lastPointerRef.current) {
         processDrop(event)
       }
     },
-    [processDrop],
+    [processDrop, endDrag],
   )
 
   if (session.isComplete) {
@@ -248,6 +276,9 @@ export function WorldMapMode({ onBack }: WorldMapModeProps) {
           )}
         </div>
       </div>
+      <DragOverlay modifiers={[snapCenterToCursor]}>
+        {activeDragId === CHIP_ID ? <DragPin /> : null}
+      </DragOverlay>
     </DndContext>
   )
 }

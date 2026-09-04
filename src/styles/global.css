@@ -442,15 +442,35 @@ body {
 }
 
 .draggable-chip.dragging {
+  opacity: 0;
   cursor: grabbing;
-  width: 20px;
-  height: 20px;
-  min-height: 20px;
-  padding: 0;
+}
+
+.drag-pin {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
+  background: #ff9800;
   border: 3px solid #fff;
-  box-shadow: 0 2px 10px rgba(245, 166, 35, 0.8);
-  opacity: 1;
+  box-shadow:
+    0 0 0 4px rgba(255, 152, 0, 0.55),
+    0 4px 14px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  animation: drag-pin-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes drag-pin-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(255, 152, 0, 0.55),
+      0 4px 14px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 0 7px rgba(255, 152, 0, 0.35),
+      0 4px 18px rgba(0, 0, 0, 0.45);
+  }
 }
 
 .draggable-chip.returning {
