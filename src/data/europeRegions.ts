@@ -2,7 +2,7 @@ import type { Region } from './regions'
 
 /** Level 2 — Europe (teacher answer key, 20 items). */
 export const europeRegions: Region[] = [
-  { id: 'arctic-ocean', name: 'Arctic Ocean', type: 'ocean', geo: { lon: 25, lat: 74, radius: 9 } },
+  { id: 'arctic-ocean', name: 'Arctic Ocean', type: 'ocean', geo: { lon: 18, lat: 71, radius: 11 } },
   { id: 'atlantic-ocean', name: 'Atlantic Ocean', type: 'ocean', geo: { lon: -20, lat: 52, radius: 9 } },
   { id: 'baltic-sea', name: 'Baltic Sea', type: 'sea', geo: { lon: 20, lat: 58, radius: 3.5 } },
   { id: 'north-sea', name: 'North Sea', type: 'sea', geo: { lon: 4, lat: 56, radius: 3 } },

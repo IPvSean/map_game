@@ -21,7 +21,8 @@ import type { WaterCircleZone } from '../waterCircleZones'
 import { EUROPE_WATER_HIT_PRIORITY } from '../waterHitPriority'
 import type { MapLevelDefinition } from './types'
 
-const STRAIT_OF_GIBRALTAR_ID = 'strait-of-gibraltar'
+/** Too small or unreliable at Europe zoom — use geo circles for hit + highlight. */
+const EUROPE_WATER_CIRCLE_IDS = ['strait-of-gibraltar', 'arctic-ocean']
 
 let cachedPaths: ReturnType<typeof buildCountryPaths> | null = null
 let cachedWaterPaths: WaterPath[] | null = null
@@ -45,15 +46,19 @@ function getWaterPaths() {
 }
 
 function getWaterCircleZones(): WaterCircleZone[] {
-  const region = getEuropeRegionById(STRAIT_OF_GIBRALTAR_ID)
-  if (!region) return []
-  const [cx, cy] = europeGeoToSvg(region.geo.lon, region.geo.lat)
-  const r = europeGeoRadiusToSvg(
-    region.geo.lon,
-    region.geo.lat,
-    region.geo.radius,
-  )
-  return [{ regionId: STRAIT_OF_GIBRALTAR_ID, cx, cy, r }]
+  const zones: WaterCircleZone[] = []
+  for (const regionId of EUROPE_WATER_CIRCLE_IDS) {
+    const region = getEuropeRegionById(regionId)
+    if (!region) continue
+    const [cx, cy] = europeGeoToSvg(region.geo.lon, region.geo.lat)
+    const r = europeGeoRadiusToSvg(
+      region.geo.lon,
+      region.geo.lat,
+      region.geo.radius,
+    )
+    zones.push({ regionId, cx, cy, r })
+  }
+  return zones
 }
 
 const hitTest = createMapHitTest({

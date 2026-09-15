@@ -3,6 +3,7 @@ export const EUROPE_WATER_HIT_PRIORITY = [
   'strait-of-gibraltar',
   'english-channel',
   'bay-of-biscay',
+  'arctic-ocean',
   'north-sea',
   'baltic-sea',
   'adriatic-sea',
