@@ -1,29 +1,57 @@
 import type { WaterPolygonDef } from './buildWaterPaths'
 
+function reverseRing(ring: number[][]): number[][] {
+  return [...ring].reverse()
+}
+
+const MEDITERRANEAN = [
+  [-6, 30],
+  [36, 30],
+  [36, 46],
+  [-6, 46],
+  [-6, 30],
+]
+
+const CARIBBEAN = [
+  [-88, 10],
+  [-60, 10],
+  [-60, 22],
+  [-88, 22],
+  [-88, 10],
+]
+
+const GULF_OF_MEXICO = [
+  [-98, 18],
+  [-82, 18],
+  [-82, 30],
+  [-98, 30],
+  [-98, 18],
+]
+
+const ATLANTIC_NORTH = [
+  [-85, -55],
+  [-15, -50],
+  [-10, 65],
+  [-80, 70],
+  [-85, -55],
+]
+
+const ATLANTIC_MID = [
+  [-50, -35],
+  [-5, -30],
+  [-5, 15],
+  [-45, 10],
+  [-50, -35],
+]
+
 /** Simplified ocean/sea shapes for world level (lon/lat). */
 export const worldWaterPolygons: WaterPolygonDef[] = [
   {
     id: 'atlantic-ocean',
     type: 'MultiPolygon',
     coordinates: [
-      [
-        [
-          [-85, -55],
-          [-15, -50],
-          [-10, 65],
-          [-80, 70],
-          [-85, -55],
-        ],
-      ],
-      [
-        [
-          [-50, -35],
-          [-5, -30],
-          [-5, 15],
-          [-45, 10],
-          [-50, -35],
-        ],
-      ],
+      [ATLANTIC_NORTH, reverseRing(CARIBBEAN), reverseRing(GULF_OF_MEXICO)],
+      [ATLANTIC_MID, reverseRing(MEDITERRANEAN)],
     ],
   },
   {
@@ -79,40 +107,16 @@ export const worldWaterPolygons: WaterPolygonDef[] = [
   {
     id: 'mediterranean-sea',
     type: 'Polygon',
-    coordinates: [
-      [
-        [-6, 30],
-        [36, 30],
-        [36, 46],
-        [-6, 46],
-        [-6, 30],
-      ],
-    ],
+    coordinates: [MEDITERRANEAN],
   },
   {
     id: 'caribbean-sea',
     type: 'Polygon',
-    coordinates: [
-      [
-        [-88, 10],
-        [-60, 10],
-        [-60, 22],
-        [-88, 22],
-        [-88, 10],
-      ],
-    ],
+    coordinates: [CARIBBEAN],
   },
   {
     id: 'gulf-of-mexico',
     type: 'Polygon',
-    coordinates: [
-      [
-        [-98, 18],
-        [-82, 18],
-        [-82, 30],
-        [-98, 30],
-        [-98, 18],
-      ],
-    ],
+    coordinates: [GULF_OF_MEXICO],
   },
 ]

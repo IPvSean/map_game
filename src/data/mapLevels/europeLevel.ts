@@ -7,6 +7,7 @@ import {
   isEuropeCountryInRegion,
 } from '../europeGeography'
 import { europeWaterPolygons } from '../europeWaterPolygons'
+import { EUROPE_WATER_HIT_PRIORITY } from '../waterHitPriority'
 import {
   EUROPE_VIEWBOX,
   europeGeoRadiusToSvg,
@@ -33,7 +34,10 @@ function getWaterPaths() {
   return cachedWaterPaths
 }
 
-const hitTest = createMapHitTest({ getRegionById: getEuropeRegionById })
+const hitTest = createMapHitTest({
+  getRegionById: getEuropeRegionById,
+  waterHitPriority: EUROPE_WATER_HIT_PRIORITY,
+})
 
 export const europeLevel: MapLevelDefinition = {
   id: 'europe',

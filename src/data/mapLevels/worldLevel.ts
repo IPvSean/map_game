@@ -9,6 +9,7 @@ import {
 } from '../regionGeography'
 import { getRegionById, regions } from '../regions'
 import { worldWaterPolygons } from '../worldWaterPolygons'
+import { WORLD_WATER_HIT_PRIORITY } from '../waterHitPriority'
 import type { MapLevelDefinition } from './types'
 
 let cachedPaths: ReturnType<typeof buildCountryPaths> | null = null
@@ -28,7 +29,10 @@ function getWaterPaths() {
   return cachedWaterPaths
 }
 
-const hitTest = createMapHitTest({ getRegionById })
+const hitTest = createMapHitTest({
+  getRegionById,
+  waterHitPriority: WORLD_WATER_HIT_PRIORITY,
+})
 
 export const worldLevel: MapLevelDefinition = {
   id: 'world',
