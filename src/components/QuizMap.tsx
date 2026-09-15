@@ -10,39 +10,6 @@ interface QuizMapProps {
   highlightMode?: 'prompt' | 'success'
 }
 
-function GeoHighlight({
-  cx,
-  cy,
-  r,
-  fill,
-  stroke,
-  strokeWidth = 2.5,
-  strokeDasharray,
-  pulse = false,
-}: {
-  cx: number
-  cy: number
-  r: number
-  fill: string
-  stroke: string
-  strokeWidth?: number
-  strokeDasharray?: string
-  pulse?: boolean
-}) {
-  return (
-    <circle
-      cx={cx}
-      cy={cy}
-      r={r}
-      fill={fill}
-      stroke={stroke}
-      strokeWidth={strokeWidth}
-      strokeDasharray={strokeDasharray}
-      className={pulse ? 'drop-zone-pulse' : undefined}
-    />
-  )
-}
-
 export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   {
     level,
@@ -55,18 +22,11 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   ref,
 ) {
   const highlightFill = highlightMode === 'prompt' ? '#f5a62355' : '#4caf5055'
-  const highlightStroke = highlightMode === 'prompt' ? '#f5a623' : '#4caf50'
   const landHighlight = highlightMode === 'prompt' ? '#f5a623' : '#66bb6a'
 
-  const { viewBox, geoToSvg, geoRadiusToSvg } = level
+  const { viewBox } = level
   const countryPaths = level.getCountryPaths()
-  const dropZones = level.getDropZoneCircles()
-
-  const highlightedRegion = highlightedRegionId
-    ? level.getRegionById(highlightedRegionId)
-    : null
-
-  const hintRegion = hintRegionId ? level.getRegionById(hintRegionId) : null
+  const waterPaths = level.getWaterPaths()
 
   const lonLines =
     level.id === 'europe'
@@ -78,6 +38,58 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
     level.id === 'europe' ? { min: 30, max: 72 } : { min: -60, max: 75 }
   const lonSpan =
     level.id === 'europe' ? { min: -25, max: 55 } : { min: -180, max: 180 }
+
+  const geoToSvg = level.geoToSvg
+
+  function waterStyle(regionId: string) {
+    const isHighlighted = highlightedRegionId === regionId
+    const isHovered = hoveredRegionId === regionId
+    const isHinted = hintRegionId === regionId
+    const dimmed =
+      ((highlightedRegionId && !isHighlighted) ||
+        (hintRegionId && !isHinted && hintRegionId !== regionId)) &&
+      !isHovered
+
+    if (isHighlighted) {
+      return {
+        fill: highlightFill,
+        stroke: highlightMode === 'prompt' ? '#f5a623' : '#4caf50',
+        strokeWidth: 2,
+        opacity: 1,
+      }
+    }
+    if (isHinted) {
+      return {
+        fill: '#f5a62355',
+        stroke: '#f5a623',
+        strokeWidth: 2.5,
+        opacity: 1,
+      }
+    }
+    if (isHovered) {
+      return {
+        fill: '#f5a62366',
+        stroke: '#f5a623',
+        strokeWidth: 3,
+        opacity: 1,
+      }
+    }
+    if (showDropZones) {
+      return {
+        fill: '#ffffff18',
+        stroke: '#4a90d988',
+        strokeWidth: 1.5,
+        strokeDasharray: '6 4',
+        opacity: dimmed ? 0.4 : 1,
+      }
+    }
+    return {
+      fill: '#7ec8e8',
+      stroke: '#6ab8d8',
+      strokeWidth: 0.4,
+      opacity: dimmed ? 0.45 : 1,
+    }
+  }
 
   return (
     <svg
@@ -120,7 +132,27 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
         )
       })}
 
-      <g>
+      <g className="water-regions">
+        {waterPaths.map(({ id, d }) => {
+          const style = waterStyle(id)
+          return (
+            <path
+              key={id}
+              data-region={id}
+              data-water="true"
+              d={d}
+              fill={style.fill}
+              stroke={style.stroke}
+              strokeWidth={style.strokeWidth}
+              strokeDasharray={style.strokeDasharray}
+              opacity={style.opacity}
+              className={hoveredRegionId === id ? 'drop-zone-pulse' : undefined}
+            />
+          )
+        })}
+      </g>
+
+      <g className="land-regions">
         {countryPaths.map(({ name, d, regionId }) => {
           const isHighlighted =
             highlightedRegionId &&
@@ -173,86 +205,6 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
           )
         })}
       </g>
-
-      {showDropZones &&
-        dropZones.map(({ region, cx, cy, r }) => {
-          const isHovered = hoveredRegionId === region.id
-          const isHint = hintRegionId === region.id
-          const isTarget = highlightedRegionId === region.id
-
-          return (
-            <GeoHighlight
-              key={region.id}
-              cx={cx}
-              cy={cy}
-              r={r}
-              fill={
-                isHovered
-                  ? '#f5a62366'
-                  : isHint
-                    ? '#f5a62333'
-                    : isTarget
-                      ? highlightFill
-                      : '#ffffff22'
-              }
-              stroke={
-                isHovered || isHint
-                  ? '#f5a623'
-                  : isTarget
-                    ? highlightStroke
-                    : '#4a90d988'
-              }
-              strokeWidth={isHovered || isHint ? 3 : 1.5}
-              strokeDasharray="6 4"
-              pulse={isHovered}
-            />
-          )
-        })}
-
-      {highlightedRegion &&
-        level.isWaterRegion(highlightedRegion.id) &&
-        !showDropZones && (
-          <GeoHighlight
-            cx={geoToSvg(highlightedRegion.geo.lon, highlightedRegion.geo.lat)[0]}
-            cy={geoToSvg(highlightedRegion.geo.lon, highlightedRegion.geo.lat)[1]}
-            r={geoRadiusToSvg(
-              highlightedRegion.geo.lon,
-              highlightedRegion.geo.lat,
-              highlightedRegion.geo.radius,
-            )}
-            fill={highlightFill}
-            stroke={highlightStroke}
-          />
-        )}
-
-      {hintRegion && !showDropZones && level.isWaterRegion(hintRegion.id) && (
-        <g aria-hidden="true">
-          <GeoHighlight
-            cx={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[0]}
-            cy={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[1]}
-            r={geoRadiusToSvg(
-              hintRegion.geo.lon,
-              hintRegion.geo.lat,
-              hintRegion.geo.radius,
-            )}
-            fill="#f5a62344"
-            stroke="#f5a623"
-            strokeWidth={2.5}
-            strokeDasharray="6 4"
-            pulse
-          />
-          <text
-            x={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[0]}
-            y={geoToSvg(hintRegion.geo.lon, hintRegion.geo.lat)[1] + 6}
-            textAnchor="middle"
-            fontSize={22}
-            fill="#f5a623"
-            fontWeight="bold"
-          >
-            ▼
-          </text>
-        </g>
-      )}
     </svg>
   )
 })

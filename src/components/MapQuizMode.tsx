@@ -245,7 +245,7 @@ export function MapQuizMode({ level, onBack }: MapQuizModeProps) {
 
         {isDragging && (
           <p className="map-drag-hint">
-            {hoveredRegionId ? 'Release to drop' : 'Drag to a glowing zone on the map'}
+            {hoveredRegionId ? 'Release to drop' : 'Drag over the map to find the right spot'}
           </p>
         )}
 

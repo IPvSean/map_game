@@ -1,26 +1,11 @@
 import type { Region } from './regions'
 
 export function createMapHitTest(options: {
-  regions: Region[]
-  waterRegionIds: Set<string>
   getRegionById: (id: string) => Region | undefined
-  geoToSvg: (lon: number, lat: number) => [number, number]
-  geoRadiusToSvg: (lon: number, lat: number, radiusDeg: number) => number
 }) {
-  const { regions, waterRegionIds, getRegionById, geoToSvg, geoRadiusToSvg } =
-    options
+  const { getRegionById } = options
 
-  const waterMatchOrder = [...regions]
-    .filter((r) => waterRegionIds.has(r.id))
-    .sort((a, b) => a.geo.radius - b.geo.radius)
-
-  function hitCircle(svgX: number, svgY: number, region: Region): boolean {
-    const [cx, cy] = geoToSvg(region.geo.lon, region.geo.lat)
-    const r = geoRadiusToSvg(region.geo.lon, region.geo.lat, region.geo.radius)
-    return Math.hypot(svgX - cx, svgY - cy) <= r
-  }
-
-  function hitCountry(
+  function findRegionAtDrop(
     svg: SVGSVGElement,
     svgX: number,
     svgY: number,
@@ -46,31 +31,5 @@ export function createMapHitTest(options: {
     return getRegionById(hits[0].regionId)
   }
 
-  function findRegionAtDrop(
-    svg: SVGSVGElement,
-    svgX: number,
-    svgY: number,
-  ): Region | undefined {
-    for (const region of waterMatchOrder) {
-      if (hitCircle(svgX, svgY, region)) {
-        return region
-      }
-    }
-    return hitCountry(svg, svgX, svgY)
-  }
-
-  function getDropZoneCircles(): Array<{
-    region: Region
-    cx: number
-    cy: number
-    r: number
-  }> {
-    return waterMatchOrder.map((region) => {
-      const [cx, cy] = geoToSvg(region.geo.lon, region.geo.lat)
-      const r = geoRadiusToSvg(region.geo.lon, region.geo.lat, region.geo.radius)
-      return { region, cx, cy, r }
-    })
-  }
-
-  return { findRegionAtDrop, getDropZoneCircles }
+  return { findRegionAtDrop }
 }
