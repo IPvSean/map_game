@@ -1,13 +1,15 @@
+import type { FeatureCollection } from 'geojson'
 import { buildCountryPaths } from '../buildCountryPaths'
-import { buildWaterPaths } from '../buildWaterPaths'
+import { buildMarinePaths } from '../buildMarinePaths'
+import type { WaterPath } from '../buildWaterPaths'
 import { createMapHitTest } from '../createMapHitTest'
 import {
   EUROPE_WATER_REGIONS,
   getEuropeRegionForCountry,
   isEuropeCountryInRegion,
 } from '../europeGeography'
-import { europeWaterPolygons } from '../europeWaterPolygons'
-import { EUROPE_WATER_HIT_PRIORITY } from '../waterHitPriority'
+import { EUROPE_MARINE_NAME_TO_REGION } from '../europeMarineNames'
+import europeMarineGeo from '../naturalEarth/ne_50m_geography_marine_polys.json'
 import {
   EUROPE_VIEWBOX,
   europeGeoRadiusToSvg,
@@ -15,10 +17,11 @@ import {
   europeProjection,
 } from '../europeProjection'
 import { europeRegions, getEuropeRegionById } from '../europeRegions'
+import { EUROPE_WATER_HIT_PRIORITY } from '../waterHitPriority'
 import type { MapLevelDefinition } from './types'
 
 let cachedPaths: ReturnType<typeof buildCountryPaths> | null = null
-let cachedWaterPaths: ReturnType<typeof buildWaterPaths> | null = null
+let cachedWaterPaths: WaterPath[] | null = null
 
 function getCountryPaths() {
   if (!cachedPaths) {
@@ -29,7 +32,11 @@ function getCountryPaths() {
 
 function getWaterPaths() {
   if (!cachedWaterPaths) {
-    cachedWaterPaths = buildWaterPaths(europeProjection, europeWaterPolygons)
+    cachedWaterPaths = buildMarinePaths(
+      europeProjection,
+      europeMarineGeo as unknown as FeatureCollection,
+      EUROPE_MARINE_NAME_TO_REGION,
+    )
   }
   return cachedWaterPaths
 }
