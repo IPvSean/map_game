@@ -15,6 +15,16 @@ export function createMapHitTest(options: {
     pt.x = svgX
     pt.y = svgY
 
+    // Seas & oceans before land — coarse country shapes often spill into nearby water.
+    for (const regionId of waterHitPriority) {
+      const path = svg.querySelector<SVGPathElement>(
+        `path[data-water="true"][data-region="${regionId}"]`,
+      )
+      if (path?.isPointInFill(pt)) {
+        return getRegionById(regionId)
+      }
+    }
+
     const landHits: Array<{ regionId: string; area: number }> = []
 
     const landPaths = svg.querySelectorAll<SVGPathElement>(
@@ -31,15 +41,6 @@ export function createMapHitTest(options: {
     if (landHits.length > 0) {
       landHits.sort((a, b) => a.area - b.area)
       return getRegionById(landHits[0].regionId)
-    }
-
-    for (const regionId of waterHitPriority) {
-      const path = svg.querySelector<SVGPathElement>(
-        `path[data-water="true"][data-region="${regionId}"]`,
-      )
-      if (path?.isPointInFill(pt)) {
-        return getRegionById(regionId)
-      }
     }
 
     return undefined

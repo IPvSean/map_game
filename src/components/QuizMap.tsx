@@ -21,7 +21,8 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   },
   ref,
 ) {
-  const highlightFill = highlightMode === 'prompt' ? '#f5a62355' : '#4caf5055'
+  const waterPromptHighlight = '#f5a623'
+  const waterSuccessHighlight = '#66bb6a'
   const landHighlight = highlightMode === 'prompt' ? '#f5a623' : '#66bb6a'
 
   const { viewBox } = level
@@ -41,54 +42,82 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
 
   const geoToSvg = level.geoToSvg
 
-  function waterStyle(regionId: string) {
+  const activeWaterOverlayId =
+    hoveredRegionId ??
+    (highlightedRegionId && level.isWaterRegion(highlightedRegionId)
+      ? highlightedRegionId
+      : null) ??
+    (hintRegionId && level.isWaterRegion(hintRegionId) ? hintRegionId : null)
+
+  function baseWaterStyle(regionId: string) {
+    const isOverlayTarget = activeWaterOverlayId === regionId
     const isHighlighted = highlightedRegionId === regionId
-    const isHovered = hoveredRegionId === regionId
-    const isHinted = hintRegionId === regionId
     const dimmed =
       ((highlightedRegionId && !isHighlighted) ||
-        (hintRegionId && !isHinted && hintRegionId !== regionId)) &&
-      !isHovered
+        (hintRegionId && hintRegionId !== regionId)) &&
+      !hoveredRegionId
 
-    if (isHighlighted) {
+    if (isOverlayTarget) {
       return {
-        fill: highlightFill,
-        stroke: highlightMode === 'prompt' ? '#f5a623' : '#4caf50',
-        strokeWidth: 2,
-        opacity: 1,
+        fill: '#7ec8e8',
+        stroke: '#6ab8d8',
+        strokeWidth: 0.4,
+        opacity: dimmed ? 0.45 : 1,
       }
     }
-    if (isHinted) {
-      return {
-        fill: '#f5a62355',
-        stroke: '#f5a623',
-        strokeWidth: 2.5,
-        opacity: 1,
-      }
-    }
-    if (isHovered) {
-      return {
-        fill: '#f5a62366',
-        stroke: '#f5a623',
-        strokeWidth: 3,
-        opacity: 1,
-      }
-    }
+
     if (showDropZones) {
+      const isHovered = hoveredRegionId === regionId
       return {
-        fill: '#ffffff18',
-        stroke: '#4a90d988',
-        strokeWidth: 1.5,
+        fill: isHovered ? '#ffffff18' : '#ffffff18',
+        stroke: isHovered ? '#f5a623' : '#4a90d988',
+        strokeWidth: isHovered ? 3 : 1.5,
         strokeDasharray: '6 4',
         opacity: dimmed ? 0.4 : 1,
       }
     }
+
     return {
       fill: '#7ec8e8',
       stroke: '#6ab8d8',
       strokeWidth: 0.4,
       opacity: dimmed ? 0.45 : 1,
     }
+  }
+
+  function waterRegionHovered(regionId: string) {
+    return hoveredRegionId === regionId
+  }
+
+  function overlayWaterStyle(regionId: string) {
+    const isHighlighted = highlightedRegionId === regionId
+    const isHovered = hoveredRegionId === regionId
+    const isHinted = hintRegionId === regionId
+
+    if (isHovered) {
+      return {
+        fill: '#f5a62399',
+        stroke: '#f5a623',
+        strokeWidth: 3,
+      }
+    }
+    if (isHinted) {
+      return {
+        fill: '#f5a62388',
+        stroke: '#f5a623',
+        strokeWidth: 2.5,
+        strokeDasharray: '6 4',
+      }
+    }
+    if (isHighlighted) {
+      return {
+        fill:
+          highlightMode === 'prompt' ? waterPromptHighlight : waterSuccessHighlight,
+        stroke: highlightMode === 'prompt' ? '#e65100' : '#4caf50',
+        strokeWidth: 2,
+      }
+    }
+    return null
   }
 
   return (
@@ -134,7 +163,7 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
 
       <g className="water-regions">
         {waterPaths.map(({ id, d }) => {
-          const style = waterStyle(id)
+          const style = baseWaterStyle(id)
           return (
             <path
               key={id}
@@ -146,7 +175,6 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
               strokeWidth={style.strokeWidth}
               strokeDasharray={style.strokeDasharray}
               opacity={style.opacity}
-              className={hoveredRegionId === id ? 'drop-zone-pulse' : undefined}
             />
           )
         })}
@@ -201,6 +229,24 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
               stroke={isHinted || isHovered ? '#f5a623' : '#4a7a3a'}
               strokeWidth={isHinted || isHovered ? 1.2 : 0.6}
               opacity={dimmed && !isHinted ? 0.55 : isQuizCountry ? 1 : 0.65}
+            />
+          )
+        })}
+      </g>
+
+      <g className="water-regions-overlay" pointerEvents="none" aria-hidden="true">
+        {waterPaths.map(({ id, d }) => {
+          const style = overlayWaterStyle(id)
+          if (!style) return null
+          return (
+            <path
+              key={`overlay-${id}`}
+              d={d}
+              fill={style.fill}
+              stroke={style.stroke}
+              strokeWidth={style.strokeWidth}
+              strokeDasharray={style.strokeDasharray}
+              className={waterRegionHovered(id) ? 'drop-zone-pulse' : undefined}
             />
           )
         })}
