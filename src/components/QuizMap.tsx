@@ -132,6 +132,7 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
     <svg
       ref={ref}
       viewBox={`0 0 ${viewBox.width} ${viewBox.height}`}
+      preserveAspectRatio="xMidYMid meet"
       xmlns="http://www.w3.org/2000/svg"
     >
       <rect width={viewBox.width} height={viewBox.height} fill="#7ec8e8" />

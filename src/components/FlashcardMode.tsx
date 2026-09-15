@@ -101,7 +101,12 @@ export function FlashcardMode({ level, onBack }: FlashcardModeProps) {
 
       <div className="question-card">
         <p className="question-text">What region is this?</p>
-        <div className="flashcard-map">
+        <div
+          className="flashcard-map"
+          style={{
+            aspectRatio: `${level.viewBox.width} / ${level.viewBox.height}`,
+          }}
+        >
           <QuizMap
             level={level}
             highlightMode="prompt"
