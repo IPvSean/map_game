@@ -223,12 +223,15 @@ body {
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: #b8dff5;
+  aspect-ratio: 16 / 10;
+  max-height: min(42vh, 320px);
+  width: 100%;
 }
 
 .flashcard-map svg {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 .question-text {

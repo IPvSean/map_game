@@ -1,6 +1,4 @@
 import type { GeoProjection } from 'd3-geo'
-import { geoPath } from 'd3-geo'
-import type { Feature, MultiPolygon, Polygon } from 'geojson'
 
 /** Lon/lat rings: Polygon = one outer ring; MultiPolygon = multiple polygons. */
 export type WaterPolygonDef =
@@ -10,31 +8,56 @@ export type WaterPolygonDef =
 export interface WaterPath {
   id: string
   d: string
+  /** Use SVG evenodd fill when the path has holes (e.g. Atlantic cutouts). */
+  evenOdd?: boolean
+}
+
+function ringToD(projection: GeoProjection, ring: number[][]): string {
+  const points: [number, number][] = []
+  for (const [lon, lat] of ring) {
+    const p = projection([lon, lat])
+    if (!p) continue
+    points.push([p[0], p[1]])
+  }
+  if (points.length < 3) return ''
+
+  const [first, ...rest] = points
+  return (
+    `M${first[0]},${first[1]}` +
+    rest.map(([x, y]) => `L${x},${y}`).join('') +
+    'Z'
+  )
+}
+
+function polygonToD(projection: GeoProjection, coordinates: number[][][]): string {
+  return coordinates.map((ring) => ringToD(projection, ring)).join('')
+}
+
+function multiPolygonToD(
+  projection: GeoProjection,
+  coordinates: number[][][][],
+): string {
+  return coordinates.map((poly) => polygonToD(projection, poly)).join('')
 }
 
 export function buildWaterPaths(
   projection: GeoProjection,
   definitions: WaterPolygonDef[],
 ): WaterPath[] {
-  const pathGen = geoPath(projection)
   const paths: WaterPath[] = []
 
   for (const def of definitions) {
-    const geometry: Polygon | MultiPolygon =
+    const d =
       def.type === 'Polygon'
-        ? { type: 'Polygon', coordinates: def.coordinates }
-        : { type: 'MultiPolygon', coordinates: def.coordinates }
+        ? polygonToD(projection, def.coordinates)
+        : multiPolygonToD(projection, def.coordinates)
 
-    const feature: Feature<Polygon | MultiPolygon> = {
-      type: 'Feature',
-      properties: {},
-      geometry,
-    }
+    if (!d) continue
 
-    const d = pathGen(feature)
-    if (d) {
-      paths.push({ id: def.id, d })
-    }
+    const hasHoles =
+      def.type === 'Polygon' && def.coordinates.length > 1
+
+    paths.push({ id: def.id, d, evenOdd: hasHoles })
   }
 
   return paths

@@ -1,9 +1,5 @@
 import type { WaterPolygonDef } from './buildWaterPaths'
 
-function reverseRing(ring: number[][]): number[][] {
-  return [...ring].reverse()
-}
-
 const MEDITERRANEAN = [
   [-6, 30],
   [36, 30],
@@ -28,30 +24,30 @@ const GULF_OF_MEXICO = [
   [-98, 18],
 ]
 
-const ATLANTIC_NORTH = [
-  [-85, -55],
-  [-15, -50],
-  [-10, 65],
-  [-80, 70],
-  [-85, -55],
-]
-
-const ATLANTIC_MID = [
-  [-50, -35],
-  [-5, -30],
-  [-5, 15],
-  [-45, 10],
-  [-50, -35],
-]
-
 /** Simplified ocean/sea shapes for world level (lon/lat). */
 export const worldWaterPolygons: WaterPolygonDef[] = [
   {
     id: 'atlantic-ocean',
     type: 'MultiPolygon',
     coordinates: [
-      [ATLANTIC_NORTH, reverseRing(CARIBBEAN), reverseRing(GULF_OF_MEXICO)],
-      [ATLANTIC_MID, reverseRing(MEDITERRANEAN)],
+      [
+        [
+          [-85, -55],
+          [-20, -50],
+          [-18, 28],
+          [-80, 32],
+          [-85, -55],
+        ],
+      ],
+      [
+        [
+          [-55, 35],
+          [-25, 38],
+          [-22, 62],
+          [-75, 65],
+          [-55, 35],
+        ],
+      ],
     ],
   },
   {

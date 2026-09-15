@@ -1,9 +1,5 @@
 import type { WaterPolygonDef } from './buildWaterPaths'
 
-function reverseRing(ring: number[][]): number[][] {
-  return [...ring].reverse()
-}
-
 const ARCTIC_OCEAN = [
   [-25, 70],
   [48, 70],
@@ -12,10 +8,11 @@ const ARCTIC_OCEAN = [
   [-25, 70],
 ]
 
-const ATLANTIC_OUTER = [
+/** Open Atlantic west of Europe — does not overlap named seas (hit order handles the rest). */
+const ATLANTIC_OCEAN = [
   [-28, 36],
-  [-7.5, 36],
-  [-7.5, 69.5],
+  [-12, 36],
+  [-12, 69.5],
   [-28, 69.5],
   [-28, 36],
 ]
@@ -121,15 +118,7 @@ export const europeWaterPolygons: WaterPolygonDef[] = [
   {
     id: 'atlantic-ocean',
     type: 'Polygon',
-    coordinates: [
-      ATLANTIC_OUTER,
-      reverseRing(BAY_OF_BISCAY),
-      reverseRing(ENGLISH_CHANNEL),
-      reverseRing(STRAIT_OF_GIBRALTAR),
-      reverseRing(MED_WEST),
-      reverseRing(MED_CENTRAL),
-      reverseRing(MED_EAST),
-    ],
+    coordinates: [ATLANTIC_OCEAN],
   },
   {
     id: 'arctic-ocean',
