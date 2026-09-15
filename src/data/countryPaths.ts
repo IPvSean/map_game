@@ -1,36 +1,17 @@
-import { feature } from 'topojson-client'
-import type { FeatureCollection, Geometry } from 'geojson'
-import type { Topology } from 'topojson-specification'
-import countriesTopology from 'world-atlas/countries-110m.json'
-import { geoPathGenerator } from './mapProjection'
+import { buildCountryPaths } from './buildCountryPaths'
+import { geoPathGenerator, projection } from './mapProjection'
 import { getRegionForCountry } from './regionGeography'
 
-export interface CountryPath {
-  name: string
-  d: string
-  regionId?: string
-}
+export type { CountryPath } from './buildCountryPaths'
 
-let cachedPaths: CountryPath[] | null = null
+let cachedPaths: ReturnType<typeof buildCountryPaths> | null = null
 
-export function getCountryPaths(): CountryPath[] {
-  if (cachedPaths) return cachedPaths
-
-  const topo = countriesTopology as unknown as Topology
-  const collection = feature(
-    topo,
-    topo.objects.countries as Topology['objects'][string],
-  ) as FeatureCollection<Geometry>
-
-  const paths: CountryPath[] = []
-  for (const f of collection.features) {
-    const name = f.properties?.name as string | undefined
-    if (!name) continue
-    const d = geoPathGenerator(f)
-    if (!d) continue
-    paths.push({ name, d, regionId: getRegionForCountry(name) })
+/** @deprecated Use level.getCountryPaths() */
+export function getCountryPaths() {
+  if (!cachedPaths) {
+    cachedPaths = buildCountryPaths(projection, getRegionForCountry)
   }
-
-  cachedPaths = paths
-  return paths
+  return cachedPaths
 }
+
+export { geoPathGenerator }

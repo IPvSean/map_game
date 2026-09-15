@@ -1,31 +1,37 @@
 import { useState } from 'react'
 import { FlashcardMode } from './components/FlashcardMode'
-import { HomeScreen, type GameMode } from './components/HomeScreen'
-import { WorldMapMode } from './components/WorldMapMode'
+import { HomeScreen, type LevelActivity } from './components/HomeScreen'
+import { MapQuizMode } from './components/MapQuizMode'
+import { getMapLevel } from './data/mapLevels'
 
 function App() {
-  const [mode, setMode] = useState<GameMode>('home')
-  const [flashSession, setFlashSession] = useState(0)
-  const [mapSession, setMapSession] = useState(0)
+  const [selection, setSelection] = useState<LevelActivity | null>(null)
+  const [sessionKey, setSessionKey] = useState(0)
 
-  const startMode = (nextMode: GameMode) => {
-    if (nextMode === 'flashcard') {
-      setFlashSession((n) => n + 1)
-    }
-    if (nextMode === 'map') {
-      setMapSession((n) => n + 1)
-    }
-    setMode(nextMode)
+  const startActivity = (next: LevelActivity) => {
+    setSessionKey((n) => n + 1)
+    setSelection(next)
   }
+
+  const goHome = () => setSelection(null)
+
+  if (!selection) {
+    return (
+      <div className="app">
+        <HomeScreen onStart={startActivity} />
+      </div>
+    )
+  }
+
+  const level = getMapLevel(selection.levelId)
 
   return (
     <div className="app">
-      {mode === 'home' && <HomeScreen onSelectMode={startMode} />}
-      {mode === 'flashcard' && (
-        <FlashcardMode key={flashSession} onBack={() => setMode('home')} />
+      {selection.activity === 'flashcard' && (
+        <FlashcardMode key={sessionKey} level={level} onBack={goHome} />
       )}
-      {mode === 'map' && (
-        <WorldMapMode key={mapSession} onBack={() => setMode('home')} />
+      {selection.activity === 'map' && (
+        <MapQuizMode key={sessionKey} level={level} onBack={goHome} />
       )}
     </div>
   )

@@ -1,29 +1,32 @@
 import { useCallback, useState } from 'react'
-import { regions } from '../data/regions'
+import type { MapLevelDefinition } from '../data/mapLevels/types'
 import { useDistractors } from '../hooks/useDistractors'
 import { useQuizSession } from '../hooks/useQuizSession'
 import { ChoiceButton } from './ChoiceButton'
 import { ProgressBar } from './ProgressBar'
+import { QuizMap } from './QuizMap'
 import { ResultsScreen } from './ResultsScreen'
-import { WorldMap } from './WorldMap'
 
 interface FlashcardModeProps {
+  level: MapLevelDefinition
   onBack: () => void
 }
 
 type AnswerState = 'default' | 'correct' | 'wrong'
 
-export function FlashcardMode({ onBack }: FlashcardModeProps) {
-  const session = useQuizSession(regions)
+export function FlashcardMode({ level, onBack }: FlashcardModeProps) {
+  const session = useQuizSession(level.regions)
   const [choiceShuffleKey, setChoiceShuffleKey] = useState(0)
   const choices = useDistractors(
     session.currentQuestion,
-    regions,
+    level.regions,
     session.currentIndex * 1000 + choiceShuffleKey,
   )
   const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [feedback, setFeedback] = useState<string | null>(null)
   const [locked, setLocked] = useState(false)
+
+  const screenTitle = `${level.title} Flashcards`
 
   const handleChoice = useCallback(
     (regionId: string) => {
@@ -64,7 +67,7 @@ export function FlashcardMode({ onBack }: FlashcardModeProps) {
           <button type="button" className="back-btn" onClick={onBack} aria-label="Back">
             ←
           </button>
-          <h1 className="screen-title">Flashcards</h1>
+          <h1 className="screen-title">{screenTitle}</h1>
         </div>
         <ResultsScreen
           correctCount={session.correctCount}
@@ -83,7 +86,7 @@ export function FlashcardMode({ onBack }: FlashcardModeProps) {
         <button type="button" className="back-btn" onClick={onBack} aria-label="Back">
           ←
         </button>
-        <h1 className="screen-title">Flashcards</h1>
+        <h1 className="screen-title">{screenTitle}</h1>
       </div>
 
       <ProgressBar current={session.currentIndex} total={session.totalQuestions} />
@@ -99,7 +102,8 @@ export function FlashcardMode({ onBack }: FlashcardModeProps) {
       <div className="question-card">
         <p className="question-text">What region is this?</p>
         <div className="flashcard-map">
-          <WorldMap
+          <QuizMap
+            level={level}
             highlightMode="prompt"
             highlightedRegionId={session.currentQuestion?.id ?? null}
           />
