@@ -221,17 +221,19 @@ body {
 .flashcard-map {
   margin-top: 16px;
   border-radius: var(--radius-sm);
-  overflow: hidden;
   background: #7ec8e8;
-  max-height: min(42vh, 320px);
   width: 100%;
+  display: flex;
+  justify-content: center;
+  line-height: 0;
 }
 
 .flashcard-map svg {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
-  vertical-align: top;
+  max-height: min(48vh, 380px);
 }
 
 .question-text {
