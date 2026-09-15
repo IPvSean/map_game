@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import type { MapLevelDefinition } from '../data/mapLevels/types'
+import { isOpenOceanRegion } from '../data/waterRegions'
 
 interface QuizMapProps {
   level: MapLevelDefinition
@@ -9,6 +10,20 @@ interface QuizMapProps {
   showDropZones?: boolean
   highlightMode?: 'prompt' | 'success'
 }
+
+const LAND_PROMPT_FILL = '#f5a623'
+const LAND_PROMPT_STROKE = '#e65100'
+const LAND_SUCCESS_FILL = '#66bb6a'
+const LAND_SUCCESS_STROKE = '#4caf50'
+
+const WATER_PROMPT_FILL = '#4fc3f7'
+const WATER_PROMPT_STROKE = '#0277bd'
+const WATER_SUCCESS_FILL = '#26c6da'
+const WATER_SUCCESS_STROKE = '#00838f'
+const WATER_HOVER_FILL = '#81d4fa'
+const WATER_HOVER_STROKE = '#0288d1'
+const WATER_HINT_FILL = '#4fc3f7'
+const WATER_HINT_STROKE = '#0277bd'
 
 export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   {
@@ -21,9 +36,6 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   },
   ref,
 ) {
-  const regionHighlight = highlightMode === 'prompt' ? '#f5a623' : '#66bb6a'
-  const regionHighlightStroke = highlightMode === 'prompt' ? '#e65100' : '#4caf50'
-
   const { viewBox } = level
   const countryPaths = level.getCountryPaths()
   const waterPaths = level.getWaterPaths()
@@ -48,26 +60,50 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
     return false
   }
 
+  function landFillStroke(isHighlighted: boolean, isHinted: boolean, isHovered: boolean) {
+    if (isHighlighted) {
+      return {
+        fill: highlightMode === 'prompt' ? LAND_PROMPT_FILL : LAND_SUCCESS_FILL,
+        stroke: highlightMode === 'prompt' ? LAND_PROMPT_STROKE : LAND_SUCCESS_STROKE,
+      }
+    }
+    if (isHinted) {
+      return { fill: LAND_PROMPT_FILL, stroke: LAND_PROMPT_STROKE }
+    }
+    if (isHovered) {
+      return { fill: '#ffe082', stroke: '#f5a623' }
+    }
+    return null
+  }
+
   function waterBaseStyle(regionId: string) {
-    const isMatch = highlightedRegionId === regionId
-    const dimmed = isRegionDimmed(regionId, isMatch)
+    const isHovered = hoveredRegionId === regionId
+    const hideBaseFill = isOpenOceanRegion(regionId)
 
     if (showDropZones) {
-      const isHovered = hoveredRegionId === regionId
       return {
-        fill: '#7ec8e8',
-        stroke: isHovered ? '#f5a623' : '#4a90d988',
+        fill: 'transparent',
+        stroke: isHovered ? WATER_HOVER_STROKE : '#4a90d988',
         strokeWidth: isHovered ? 3 : 1.5,
         strokeDasharray: '6 4',
-        opacity: dimmed ? 0.45 : 1,
+        opacity: 1,
+      }
+    }
+
+    if (hideBaseFill) {
+      return {
+        fill: 'transparent',
+        stroke: 'none',
+        strokeWidth: 0,
+        opacity: 1,
       }
     }
 
     return {
-      fill: '#7ec8e8',
-      stroke: '#5ba8c9',
-      strokeWidth: 0.5,
-      opacity: dimmed ? 0.45 : 1,
+      fill: 'transparent',
+      stroke: 'none',
+      strokeWidth: 0,
+      opacity: 1,
     }
   }
 
@@ -77,16 +113,16 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
     const isHinted = hintRegionId === regionId
 
     if (isHovered) {
-      return { fill: '#ffe082', stroke: '#f5a623', strokeWidth: 2 }
+      return { fill: WATER_HOVER_FILL, stroke: WATER_HOVER_STROKE, strokeWidth: 2.5 }
     }
     if (isHinted) {
-      return { fill: '#f5a623', stroke: '#e65100', strokeWidth: 2 }
+      return { fill: WATER_HINT_FILL, stroke: WATER_HINT_STROKE, strokeWidth: 2.5 }
     }
     if (isHighlighted) {
       return {
-        fill: regionHighlight,
-        stroke: regionHighlightStroke,
-        strokeWidth: 2,
+        fill: highlightMode === 'prompt' ? WATER_PROMPT_FILL : WATER_SUCCESS_FILL,
+        stroke: highlightMode === 'prompt' ? WATER_PROMPT_STROKE : WATER_SUCCESS_STROKE,
+        strokeWidth: 2.5,
       }
     }
     return null
@@ -155,23 +191,25 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
       <g className="land-regions">
         {countryPaths.map(({ name, d, regionId }) => {
           const isHighlighted =
-            highlightedRegionId &&
-            regionId &&
-            level.isCountryInRegion(name, highlightedRegionId)
+            Boolean(highlightedRegionId) &&
+            Boolean(regionId) &&
+            !level.isWaterRegion(highlightedRegionId!) &&
+            level.isCountryInRegion(name, highlightedRegionId!)
 
           const isHovered =
-            hoveredRegionId &&
-            regionId &&
-            level.isCountryInRegion(name, hoveredRegionId)
+            Boolean(hoveredRegionId) &&
+            Boolean(regionId) &&
+            level.isCountryInRegion(name, hoveredRegionId!)
 
           const isHinted =
-            hintRegionId &&
-            regionId &&
-            !level.isWaterRegion(hintRegionId) &&
-            level.isCountryInRegion(name, hintRegionId)
+            Boolean(hintRegionId) &&
+            Boolean(regionId) &&
+            !level.isWaterRegion(hintRegionId!) &&
+            level.isCountryInRegion(name, hintRegionId!)
 
           const dimmed = isRegionDimmed(regionId ?? '', Boolean(isHighlighted))
           const isQuizCountry = Boolean(regionId)
+          const active = landFillStroke(Boolean(isHighlighted), Boolean(isHinted), Boolean(isHovered))
 
           return (
             <path
@@ -180,26 +218,11 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
               data-region={regionId ?? undefined}
               d={d}
               fill={
-                isHighlighted
-                  ? regionHighlight
-                  : isHinted
-                    ? '#f5a623'
-                    : isHovered
-                      ? '#ffe082'
-                      : dimmed
-                        ? '#a5c99a'
-                        : isQuizCountry
-                          ? '#8bc34a'
-                          : '#9ec89a'
+                active?.fill ??
+                (dimmed ? '#a5c99a' : isQuizCountry ? '#8bc34a' : '#9ec89a')
               }
-              stroke={
-                isHighlighted
-                  ? regionHighlightStroke
-                  : isHinted || isHovered
-                    ? '#f5a623'
-                    : '#4a7a3a'
-              }
-              strokeWidth={isHighlighted || isHinted || isHovered ? 1.2 : 0.6}
+              stroke={active?.stroke ?? '#4a7a3a'}
+              strokeWidth={active ? 1.2 : 0.6}
               opacity={dimmed && !isHinted ? 0.55 : isQuizCountry ? 1 : 0.65}
             />
           )
