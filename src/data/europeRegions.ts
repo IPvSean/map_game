@@ -8,7 +8,7 @@ export const europeRegions: Region[] = [
   { id: 'north-sea', name: 'North Sea', type: 'sea', geo: { lon: 4, lat: 56, radius: 3 } },
   { id: 'english-channel', name: 'English Channel', type: 'sea', geo: { lon: -1, lat: 50, radius: 2 } },
   { id: 'bay-of-biscay', name: 'Bay of Biscay', type: 'sea', geo: { lon: -6, lat: 45, radius: 3.5 } },
-  { id: 'strait-of-gibraltar', name: 'Strait of Gibraltar', type: 'sea', geo: { lon: -5.5, lat: 36, radius: 1.8 } },
+  { id: 'strait-of-gibraltar', name: 'Strait of Gibraltar', type: 'sea', geo: { lon: -5.5, lat: 36, radius: 2.8 } },
   { id: 'mediterranean-sea', name: 'Mediterranean Sea', type: 'sea', geo: { lon: 18, lat: 38, radius: 7 } },
   { id: 'adriatic-sea', name: 'Adriatic Sea', type: 'sea', geo: { lon: 17, lat: 42.5, radius: 2.5 } },
   { id: 'aegean-sea', name: 'Aegean Sea', type: 'sea', geo: { lon: 25, lat: 39, radius: 3 } },

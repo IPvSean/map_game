@@ -39,6 +39,7 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   const { viewBox } = level
   const countryPaths = level.getCountryPaths()
   const waterPaths = level.getWaterPaths()
+  const waterCircleZones = level.getWaterCircleZones()
 
   const lonLines =
     level.id === 'europe'
@@ -187,6 +188,24 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
             />
           )
         })}
+        {waterCircleZones.map(({ regionId, cx, cy, r }) => {
+          const style = waterBaseStyle(regionId)
+          return (
+            <circle
+              key={`circle-${regionId}`}
+              data-region={regionId}
+              data-water="true"
+              cx={cx}
+              cy={cy}
+              r={r}
+              fill={style.fill}
+              stroke={style.stroke}
+              strokeWidth={style.strokeWidth}
+              strokeDasharray={style.strokeDasharray}
+              opacity={style.opacity}
+            />
+          )
+        })}
       </g>
 
       <g className="land-regions">
@@ -242,6 +261,24 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
               stroke={style.stroke}
               strokeWidth={style.strokeWidth}
               className={hoveredRegionId === id ? 'drop-zone-pulse' : undefined}
+            />
+          )
+        })}
+        {waterCircleZones.map(({ regionId, cx, cy, r }) => {
+          const style = waterOverlayStyle(regionId)
+          if (!style) return null
+          return (
+            <circle
+              key={`overlay-circle-${regionId}`}
+              cx={cx}
+              cy={cy}
+              r={r}
+              fill={style.fill}
+              stroke={style.stroke}
+              strokeWidth={style.strokeWidth}
+              className={
+                hoveredRegionId === regionId ? 'drop-zone-pulse' : undefined
+              }
             />
           )
         })}

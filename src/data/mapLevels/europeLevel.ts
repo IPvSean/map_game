@@ -17,8 +17,11 @@ import {
   europeProjection,
 } from '../europeProjection'
 import { europeRegions, getEuropeRegionById } from '../europeRegions'
+import type { WaterCircleZone } from '../waterCircleZones'
 import { EUROPE_WATER_HIT_PRIORITY } from '../waterHitPriority'
 import type { MapLevelDefinition } from './types'
+
+const STRAIT_OF_GIBRALTAR_ID = 'strait-of-gibraltar'
 
 let cachedPaths: ReturnType<typeof buildCountryPaths> | null = null
 let cachedWaterPaths: WaterPath[] | null = null
@@ -41,6 +44,18 @@ function getWaterPaths() {
   return cachedWaterPaths
 }
 
+function getWaterCircleZones(): WaterCircleZone[] {
+  const region = getEuropeRegionById(STRAIT_OF_GIBRALTAR_ID)
+  if (!region) return []
+  const [cx, cy] = europeGeoToSvg(region.geo.lon, region.geo.lat)
+  const r = europeGeoRadiusToSvg(
+    region.geo.lon,
+    region.geo.lat,
+    region.geo.radius,
+  )
+  return [{ regionId: STRAIT_OF_GIBRALTAR_ID, cx, cy, r }]
+}
+
 const hitTest = createMapHitTest({
   getRegionById: getEuropeRegionById,
   waterHitPriority: EUROPE_WATER_HIT_PRIORITY,
@@ -54,6 +69,7 @@ export const europeLevel: MapLevelDefinition = {
   getRegionById: getEuropeRegionById,
   getCountryPaths,
   getWaterPaths,
+  getWaterCircleZones,
   findRegionAtDrop: hitTest.findRegionAtDrop,
   isWaterRegion: (id) => EUROPE_WATER_REGIONS.has(id),
   isCountryInRegion: isEuropeCountryInRegion,

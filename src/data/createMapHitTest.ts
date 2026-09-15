@@ -20,7 +20,10 @@ export function createMapHitTest(options: {
       const path = svg.querySelector<SVGPathElement>(
         `path[data-water="true"][data-region="${regionId}"]`,
       )
-      if (path?.isPointInFill(pt)) {
+      const circle = svg.querySelector<SVGCircleElement>(
+        `circle[data-water="true"][data-region="${regionId}"]`,
+      )
+      if (path?.isPointInFill(pt) || circle?.isPointInFill(pt)) {
         return getRegionById(regionId)
       }
     }

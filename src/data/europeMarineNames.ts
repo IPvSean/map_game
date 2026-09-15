@@ -6,7 +6,6 @@ export const EUROPE_MARINE_NAME_TO_REGION: Record<string, string> = {
   'North Sea': 'north-sea',
   'English Channel': 'english-channel',
   'Bay of Biscay': 'bay-of-biscay',
-  'Strait of Gibraltar': 'strait-of-gibraltar',
   'Mediterranean Sea': 'mediterranean-sea',
   'Adriatic Sea': 'adriatic-sea',
   'Aegean Sea': 'aegean-sea',

@@ -1,6 +1,7 @@
 import type { CountryPath } from '../buildCountryPaths'
 import type { WaterPath } from '../buildWaterPaths'
 import type { Region } from '../regions'
+import type { WaterCircleZone } from '../waterCircleZones'
 
 export type LevelId = 'world' | 'europe'
 
@@ -12,6 +13,7 @@ export interface MapLevelDefinition {
   getRegionById: (id: string) => Region | undefined
   getCountryPaths: () => CountryPath[]
   getWaterPaths: () => WaterPath[]
+  getWaterCircleZones: () => WaterCircleZone[]
   findRegionAtDrop: (
     svg: SVGSVGElement,
     svgX: number,

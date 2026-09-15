@@ -49,6 +49,7 @@ export const worldLevel: MapLevelDefinition = {
   getRegionById,
   getCountryPaths,
   getWaterPaths,
+  getWaterCircleZones: () => [],
   findRegionAtDrop: hitTest.findRegionAtDrop,
   isWaterRegion: (id) => WATER_REGIONS.has(id),
   isCountryInRegion,
