@@ -24,4 +24,6 @@ export interface MapLevelDefinition {
   viewBox: { width: number; height: number }
   geoToSvg: (lon: number, lat: number) => [number, number]
   geoRadiusToSvg: (lon: number, lat: number, radiusDeg: number) => number
+  /** Northern water band for Arctic Ocean (Europe level). */
+  arcticBandMaxSvgY?: number
 }

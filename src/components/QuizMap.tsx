@@ -53,6 +53,8 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
     level.id === 'europe' ? { min: -25, max: 55 } : { min: -180, max: 180 }
 
   const geoToSvg = level.geoToSvg
+  const arcticBandMaxSvgY = level.arcticBandMaxSvgY
+  const ARCTIC_OCEAN_ID = 'arctic-ocean'
 
   function isRegionDimmed(regionId: string, isMatch: boolean) {
     if (hoveredRegionId && hoveredRegionId === regionId) return false
@@ -124,10 +126,18 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
         fill: highlightMode === 'prompt' ? WATER_PROMPT_FILL : WATER_SUCCESS_FILL,
         stroke: highlightMode === 'prompt' ? WATER_PROMPT_STROKE : WATER_SUCCESS_STROKE,
         strokeWidth: 2.5,
+        strokeDasharray: undefined,
       }
     }
     return null
   }
+
+  const arcticMaskId = `arctic-water-mask-${level.id}`
+  const arcticOverlayStyle = arcticBandMaxSvgY != null
+    ? waterOverlayStyle(ARCTIC_OCEAN_ID)
+    : null
+  const arcticDropZoneStyle =
+    arcticBandMaxSvgY != null && showDropZones ? waterBaseStyle(ARCTIC_OCEAN_ID) : null
 
   return (
     <svg
@@ -137,6 +147,23 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
       xmlns="http://www.w3.org/2000/svg"
     >
       <rect width={viewBox.width} height={viewBox.height} fill="#7ec8e8" />
+
+      {arcticBandMaxSvgY != null && (
+        <defs>
+          <mask id={arcticMaskId}>
+            <rect
+              x={0}
+              y={0}
+              width={viewBox.width}
+              height={arcticBandMaxSvgY}
+              fill="white"
+            />
+            {countryPaths.map(({ name, d }) => (
+              <path key={`arctic-mask-${name}`} d={d} fill="black" />
+            ))}
+          </mask>
+        </defs>
+      )}
 
       {lonLines.map((lon) => {
         const [x1, y1] = geoToSvg(lon, latSpan.min)
@@ -189,6 +216,7 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
           )
         })}
         {waterCircleZones.map(({ regionId, cx, cy, r }) => {
+          if (regionId === ARCTIC_OCEAN_ID) return null
           const style = waterBaseStyle(regionId)
           return (
             <circle
@@ -206,6 +234,21 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
             />
           )
         })}
+        {arcticDropZoneStyle && (
+          <rect
+            key="arctic-band-drop"
+            x={0}
+            y={0}
+            width={viewBox.width}
+            height={arcticBandMaxSvgY}
+            fill={arcticDropZoneStyle.fill}
+            stroke={arcticDropZoneStyle.stroke}
+            strokeWidth={arcticDropZoneStyle.strokeWidth}
+            strokeDasharray={arcticDropZoneStyle.strokeDasharray}
+            opacity={arcticDropZoneStyle.opacity}
+            mask={`url(#${arcticMaskId})`}
+          />
+        )}
       </g>
 
       <g className="land-regions">
@@ -265,6 +308,7 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
           )
         })}
         {waterCircleZones.map(({ regionId, cx, cy, r }) => {
+          if (regionId === ARCTIC_OCEAN_ID) return null
           const style = waterOverlayStyle(regionId)
           if (!style) return null
           return (
@@ -282,6 +326,22 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
             />
           )
         })}
+        {arcticOverlayStyle && arcticBandMaxSvgY != null && (
+          <rect
+            key="arctic-band-overlay"
+            x={0}
+            y={0}
+            width={viewBox.width}
+            height={arcticBandMaxSvgY}
+            fill={arcticOverlayStyle.fill}
+            stroke={arcticOverlayStyle.stroke}
+            strokeWidth={arcticOverlayStyle.strokeWidth}
+            mask={`url(#${arcticMaskId})`}
+            className={
+              hoveredRegionId === ARCTIC_OCEAN_ID ? 'drop-zone-pulse' : undefined
+            }
+          />
+        )}
       </g>
     </svg>
   )

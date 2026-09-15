@@ -39,6 +39,7 @@ function getWaterPaths() {
 const hitTest = createMapHitTest({
   getRegionById,
   waterHitPriority: WORLD_WATER_HIT_PRIORITY,
+  openOceanHitPriority: [],
 })
 
 export const worldLevel: MapLevelDefinition = {

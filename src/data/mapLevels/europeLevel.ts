@@ -18,11 +18,18 @@ import {
 } from '../europeProjection'
 import { europeRegions, getEuropeRegionById } from '../europeRegions'
 import type { WaterCircleZone } from '../waterCircleZones'
-import { EUROPE_WATER_HIT_PRIORITY } from '../waterHitPriority'
+import {
+  EUROPE_OPEN_OCEAN_HIT_PRIORITY,
+  EUROPE_WATER_HIT_PRIORITY,
+} from '../waterHitPriority'
 import type { MapLevelDefinition } from './types'
 
-/** Too small or unreliable at Europe zoom — use geo circles for hit + highlight. */
-const EUROPE_WATER_CIRCLE_IDS = ['strait-of-gibraltar', 'arctic-ocean']
+const STRAIT_OF_GIBRALTAR_ID = 'strait-of-gibraltar'
+
+/** Open water in the northern strip (above ~68°N; land still wins via hit test). */
+const ARCTIC_BAND_MAX_SVG_Y = Math.max(
+  ...[-25, 0, 20, 45].map((lon) => europeGeoToSvg(lon, 68)[1]),
+)
 
 let cachedPaths: ReturnType<typeof buildCountryPaths> | null = null
 let cachedWaterPaths: WaterPath[] | null = null
@@ -46,24 +53,22 @@ function getWaterPaths() {
 }
 
 function getWaterCircleZones(): WaterCircleZone[] {
-  const zones: WaterCircleZone[] = []
-  for (const regionId of EUROPE_WATER_CIRCLE_IDS) {
-    const region = getEuropeRegionById(regionId)
-    if (!region) continue
-    const [cx, cy] = europeGeoToSvg(region.geo.lon, region.geo.lat)
-    const r = europeGeoRadiusToSvg(
-      region.geo.lon,
-      region.geo.lat,
-      region.geo.radius,
-    )
-    zones.push({ regionId, cx, cy, r })
-  }
-  return zones
+  const region = getEuropeRegionById(STRAIT_OF_GIBRALTAR_ID)
+  if (!region) return []
+  const [cx, cy] = europeGeoToSvg(region.geo.lon, region.geo.lat)
+  const r = europeGeoRadiusToSvg(
+    region.geo.lon,
+    region.geo.lat,
+    region.geo.radius,
+  )
+  return [{ regionId: STRAIT_OF_GIBRALTAR_ID, cx, cy, r }]
 }
 
 const hitTest = createMapHitTest({
   getRegionById: getEuropeRegionById,
   waterHitPriority: EUROPE_WATER_HIT_PRIORITY,
+  openOceanHitPriority: EUROPE_OPEN_OCEAN_HIT_PRIORITY,
+  arcticBand: { regionId: 'arctic-ocean', maxSvgY: ARCTIC_BAND_MAX_SVG_Y },
 })
 
 export const europeLevel: MapLevelDefinition = {
@@ -81,4 +86,5 @@ export const europeLevel: MapLevelDefinition = {
   viewBox: EUROPE_VIEWBOX,
   geoToSvg: europeGeoToSvg,
   geoRadiusToSvg: europeGeoRadiusToSvg,
+  arcticBandMaxSvgY: ARCTIC_BAND_MAX_SVG_Y,
 }
