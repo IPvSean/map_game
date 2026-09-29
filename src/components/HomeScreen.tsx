@@ -70,6 +70,33 @@ export function HomeScreen({ onStart }: HomeScreenProps) {
           </button>
         </div>
       </section>
+
+      <section className="level-section" aria-labelledby="level-3-heading">
+        <h2 id="level-3-heading" className="level-heading">
+          Level 3 — Asia
+        </h2>
+        <p className="level-desc">Regions & seas</p>
+        <div className="mode-buttons">
+          <button
+            type="button"
+            className="mode-btn"
+            onClick={() => onStart({ levelId: 'asia', activity: 'flashcard' })}
+          >
+            <span className="mode-btn-icon" aria-hidden="true">🃏</span>
+            <span className="mode-btn-label">Flashcards</span>
+            <span className="mode-btn-desc">Pick the right answer</span>
+          </button>
+          <button
+            type="button"
+            className="mode-btn"
+            onClick={() => onStart({ levelId: 'asia', activity: 'map' })}
+          >
+            <span className="mode-btn-icon" aria-hidden="true">🗺️</span>
+            <span className="mode-btn-label">Asia Map</span>
+            <span className="mode-btn-desc">Drag labels to the map</span>
+          </button>
+        </div>
+      </section>
     </div>
   )
 }

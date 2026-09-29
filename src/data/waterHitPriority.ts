@@ -22,3 +22,20 @@ export const WORLD_WATER_HIT_PRIORITY = [
   'pacific-ocean',
   'atlantic-ocean',
 ]
+
+/** Regional seas / strait first; Arctic NE path next; open oceans last. */
+export const ASIA_WATER_HIT_PRIORITY = [
+  'strait-of-hormuz',
+  'persian-gulf',
+  'caspian-sea',
+  'black-sea',
+  'bering-sea',
+  'sea-of-japan',
+  'east-china-sea',
+  'south-china-sea',
+  'bay-of-bengal',
+  'arabian-sea',
+  'arctic-ocean',
+]
+
+export const ASIA_OPEN_OCEAN_HIT_PRIORITY = ['indian-ocean', 'pacific-ocean']

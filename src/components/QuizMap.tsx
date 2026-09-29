@@ -44,13 +44,27 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   const lonLines =
     level.id === 'europe'
       ? [-10, 0, 10, 20, 30, 40]
-      : [-120, -60, 0, 60, 120]
+      : level.id === 'asia'
+        ? [20, 40, 60, 80, 100, 120, 140, 160]
+        : [-120, -60, 0, 60, 120]
   const latLines =
-    level.id === 'europe' ? [35, 45, 55, 65] : [-30, 0, 30, 60]
+    level.id === 'europe'
+      ? [35, 45, 55, 65]
+      : level.id === 'asia'
+        ? [0, 20, 40, 60]
+        : [-30, 0, 30, 60]
   const latSpan =
-    level.id === 'europe' ? { min: 30, max: 72 } : { min: -60, max: 75 }
+    level.id === 'europe'
+      ? { min: 30, max: 72 }
+      : level.id === 'asia'
+        ? { min: -10, max: 75 }
+        : { min: -60, max: 75 }
   const lonSpan =
-    level.id === 'europe' ? { min: -25, max: 55 } : { min: -180, max: 180 }
+    level.id === 'europe'
+      ? { min: -25, max: 55 }
+      : level.id === 'asia'
+        ? { min: 20, max: 170 }
+        : { min: -180, max: 180 }
 
   const geoToSvg = level.geoToSvg
   const arcticBandMaxSvgY = level.arcticBandMaxSvgY

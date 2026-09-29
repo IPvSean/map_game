@@ -1,0 +1,20 @@
+/** Natural Earth `name` → Asia level region id (ne_50m marine polys). */
+export const ASIA_MARINE_NAME_TO_REGION: Record<string, string> = {
+  'Arctic Ocean': 'arctic-ocean',
+  'North Pacific Ocean': 'pacific-ocean',
+  'South Pacific Ocean': 'pacific-ocean',
+  'Philippine Sea': 'pacific-ocean',
+  'Bering Sea': 'bering-sea',
+  'Sea of Japan': 'sea-of-japan',
+  'East China Sea': 'east-china-sea',
+  'Yellow Sea': 'east-china-sea',
+  'South China Sea': 'south-china-sea',
+  'Gulf of Thailand': 'south-china-sea',
+  'Bay of Bengal': 'bay-of-bengal',
+  'INDIAN OCEAN': 'indian-ocean',
+  'Arabian Sea': 'arabian-sea',
+  'Gulf of Oman': 'arabian-sea',
+  'Persian Gulf': 'persian-gulf',
+  'Caspian Sea': 'caspian-sea',
+  'Black Sea': 'black-sea',
+}

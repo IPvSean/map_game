@@ -3,7 +3,7 @@ import type { WaterPath } from '../buildWaterPaths'
 import type { Region } from '../regions'
 import type { WaterCircleZone } from '../waterCircleZones'
 
-export type LevelId = 'world' | 'europe'
+export type LevelId = 'world' | 'europe' | 'asia'
 
 export interface MapLevelDefinition {
   id: LevelId
