@@ -40,31 +40,41 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   const countryPaths = level.getCountryPaths()
   const waterPaths = level.getWaterPaths()
   const waterCircleZones = level.getWaterCircleZones()
+  const featurePaths = level.getFeaturePaths?.() ?? []
+  const landCircleZones = level.getLandCircleZones?.() ?? []
 
   const lonLines =
     level.id === 'europe'
       ? [-10, 0, 10, 20, 30, 40]
       : level.id === 'asia'
         ? [20, 40, 60, 80, 100, 120, 140, 160]
-        : [-120, -60, 0, 60, 120]
+        : level.id === 'africa'
+          ? [-20, -10, 0, 10, 20, 30, 40, 50]
+          : [-120, -60, 0, 60, 120]
   const latLines =
     level.id === 'europe'
       ? [35, 45, 55, 65]
       : level.id === 'asia'
         ? [0, 20, 40, 60]
-        : [-30, 0, 30, 60]
+        : level.id === 'africa'
+          ? [-30, -15, 0, 15, 30]
+          : [-30, 0, 30, 60]
   const latSpan =
     level.id === 'europe'
       ? { min: 30, max: 72 }
       : level.id === 'asia'
         ? { min: -10, max: 75 }
-        : { min: -60, max: 75 }
+        : level.id === 'africa'
+          ? { min: -38, max: 40 }
+          : { min: -60, max: 75 }
   const lonSpan =
     level.id === 'europe'
       ? { min: -25, max: 55 }
       : level.id === 'asia'
         ? { min: 20, max: 170 }
-        : { min: -180, max: 180 }
+        : level.id === 'africa'
+          ? { min: -25, max: 55 }
+          : { min: -180, max: 180 }
 
   const geoToSvg = level.geoToSvg
   const arcticBandMaxSvgY = level.arcticBandMaxSvgY
@@ -147,11 +157,20 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
   }
 
   const arcticMaskId = `arctic-water-mask-${level.id}`
+  const desertPatternId = `desert-hatch-${level.id}`
   const arcticOverlayStyle = arcticBandMaxSvgY != null
     ? waterOverlayStyle(ARCTIC_OCEAN_ID)
     : null
   const arcticDropZoneStyle =
     arcticBandMaxSvgY != null && showDropZones ? waterBaseStyle(ARCTIC_OCEAN_ID) : null
+
+  function featureIsActive(regionId: string) {
+    return (
+      highlightedRegionId === regionId ||
+      hoveredRegionId === regionId ||
+      hintRegionId === regionId
+    )
+  }
 
   return (
     <svg
@@ -162,8 +181,24 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
     >
       <rect width={viewBox.width} height={viewBox.height} fill="#7ec8e8" />
 
-      {arcticBandMaxSvgY != null && (
-        <defs>
+      <defs>
+        <pattern
+          id={desertPatternId}
+          width={8}
+          height={8}
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
+          <line
+            x1={0}
+            y1={0}
+            x2={0}
+            y2={8}
+            stroke="#c4a35a"
+            strokeWidth={2}
+          />
+        </pattern>
+        {arcticBandMaxSvgY != null && (
           <mask id={arcticMaskId}>
             <rect
               x={0}
@@ -176,8 +211,8 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
               <path key={`arctic-mask-${name}`} d={d} fill="black" />
             ))}
           </mask>
-        </defs>
-      )}
+        )}
+      </defs>
 
       {lonLines.map((lon) => {
         const [x1, y1] = geoToSvg(lon, latSpan.min)
@@ -301,6 +336,104 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
               stroke={active?.stroke ?? '#4a7a3a'}
               strokeWidth={active ? 1.2 : 0.6}
               opacity={dimmed && !isHinted ? 0.55 : isQuizCountry ? 1 : 0.65}
+            />
+          )
+        })}
+      </g>
+
+      <g className="map-features">
+        {featurePaths.map(({ regionId, d, kind, strokeWidth }) => {
+          const active = featureIsActive(regionId)
+          if (kind === 'desert') {
+            return (
+              <path
+                key={regionId}
+                data-region={regionId}
+                data-feature="true"
+                data-feature-kind={kind}
+                d={d}
+                fill={`url(#${desertPatternId})`}
+                stroke={active ? LAND_PROMPT_STROKE : '#b8956a88'}
+                strokeWidth={active ? 2 : 1}
+                opacity={active ? 0.95 : 0.45}
+                className={hoveredRegionId === regionId ? 'drop-zone-pulse' : undefined}
+              />
+            )
+          }
+          if (kind === 'river') {
+            const hitWidth = strokeWidth ?? 10
+            return (
+              <g key={regionId}>
+                <path
+                  data-region={regionId}
+                  data-feature="true"
+                  data-feature-kind={kind}
+                  d={d}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={hitWidth}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={active ? '#7e57c2' : '#6a4c9c'}
+                  strokeWidth={active ? 4.5 : 2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={active ? 1 : 0.85}
+                  pointerEvents="none"
+                  className={hoveredRegionId === regionId ? 'drop-zone-pulse' : undefined}
+                />
+              </g>
+            )
+          }
+          const landActive = landFillStroke(
+            highlightedRegionId === regionId,
+            hintRegionId === regionId,
+            hoveredRegionId === regionId,
+          )
+          return (
+            <path
+              key={regionId}
+              data-region={regionId}
+              data-feature="true"
+              data-feature-kind={kind}
+              d={d}
+              fill={landActive?.fill ?? (showDropZones ? '#f5a62333' : 'transparent')}
+              stroke={landActive?.stroke ?? (showDropZones ? LAND_PROMPT_STROKE : 'none')}
+              strokeWidth={landActive || showDropZones ? 1.5 : 0}
+              opacity={landActive ? 1 : showDropZones ? 0.7 : 0}
+              className={hoveredRegionId === regionId ? 'drop-zone-pulse' : undefined}
+            />
+          )
+        })}
+        {landCircleZones.map(({ regionId, cx, cy, r }) => {
+          const landActive = landFillStroke(
+            highlightedRegionId === regionId,
+            hintRegionId === regionId,
+            hoveredRegionId === regionId,
+          )
+          return (
+            <circle
+              key={`land-circle-${regionId}`}
+              data-region={regionId}
+              data-feature="true"
+              cx={cx}
+              cy={cy}
+              r={r}
+              fill={landActive?.fill ?? (showDropZones ? '#f5a62333' : 'transparent')}
+              stroke={
+                landActive?.stroke ??
+                (showDropZones || hoveredRegionId === regionId
+                  ? LAND_PROMPT_STROKE
+                  : '#4a7a3a88')
+              }
+              strokeWidth={landActive || showDropZones ? 2 : 1.2}
+              strokeDasharray={showDropZones && !landActive ? '6 4' : undefined}
+              opacity={landActive ? 1 : 0.85}
+              className={hoveredRegionId === regionId ? 'drop-zone-pulse' : undefined}
             />
           )
         })}

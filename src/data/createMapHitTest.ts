@@ -8,7 +8,7 @@ function hitLandAtPoint(
   const landHits: Array<{ regionId: string; area: number }> = []
 
   const landPaths = svg.querySelectorAll<SVGPathElement>(
-    'path[data-region]:not([data-water])',
+    'path[data-region]:not([data-water]):not([data-feature])',
   )
   for (const path of landPaths) {
     if (!path.isPointInFill(pt)) continue
@@ -24,16 +24,45 @@ function hitLandAtPoint(
   return getRegionById(landHits[0].regionId)
 }
 
+function featureHitAtPoint(
+  svg: SVGSVGElement,
+  pt: SVGPoint,
+  regionIds: string[],
+  getRegionById: (id: string) => Region | undefined,
+): Region | undefined {
+  for (const regionId of regionIds) {
+    const path = svg.querySelector<SVGPathElement>(
+      `path[data-feature="true"][data-region="${regionId}"]`,
+    )
+    const circle = svg.querySelector<SVGCircleElement>(
+      `circle[data-feature="true"][data-region="${regionId}"]`,
+    )
+    if (circle?.isPointInFill(pt)) {
+      return getRegionById(regionId)
+    }
+    if (!path) continue
+    const kind = path.getAttribute('data-feature-kind')
+    if (kind === 'river') {
+      if (path.isPointInStroke(pt)) return getRegionById(regionId)
+    } else if (path.isPointInFill(pt)) {
+      return getRegionById(regionId)
+    }
+  }
+  return undefined
+}
+
 export function createMapHitTest(options: {
   getRegionById: (id: string) => Region | undefined
   waterHitPriority: string[]
   openOceanHitPriority?: string[]
+  featureHitPriority?: string[]
   arcticBand?: { regionId: string; maxSvgY: number }
 }) {
   const {
     getRegionById,
     waterHitPriority,
     openOceanHitPriority = [],
+    featureHitPriority = [],
     arcticBand,
   } = options
 
@@ -67,6 +96,9 @@ export function createMapHitTest(options: {
 
     const regional = waterHitAtPoint(svg, pt, waterHitPriority)
     if (regional) return regional
+
+    const feature = featureHitAtPoint(svg, pt, featureHitPriority, getRegionById)
+    if (feature) return feature
 
     const land = hitLandAtPoint(svg, pt, getRegionById)
     if (land) return land

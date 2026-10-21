@@ -39,3 +39,22 @@ export const ASIA_WATER_HIT_PRIORITY = [
 ]
 
 export const ASIA_OPEN_OCEAN_HIT_PRIORITY = ['indian-ocean', 'pacific-ocean']
+
+export const AFRICA_WATER_HIT_PRIORITY = [
+  'strait-of-gibraltar',
+  'mozambique-channel',
+  'gulf-of-aden',
+  'gulf-of-guinea',
+  'red-sea',
+  'mediterranean-sea',
+]
+
+export const AFRICA_OPEN_OCEAN_HIT_PRIORITY = ['indian-ocean', 'atlantic-ocean']
+
+/** Special land features before country regions. */
+export const AFRICA_FEATURE_HIT_PRIORITY = [
+  'cape-of-good-hope',
+  'sinai-peninsula',
+  'nile-river',
+  'sahara-desert',
+]

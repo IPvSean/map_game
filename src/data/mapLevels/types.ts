@@ -1,9 +1,10 @@
 import type { CountryPath } from '../buildCountryPaths'
 import type { WaterPath } from '../buildWaterPaths'
+import type { LandCircleZone, MapFeaturePath } from '../mapFeatures'
 import type { Region } from '../regions'
 import type { WaterCircleZone } from '../waterCircleZones'
 
-export type LevelId = 'world' | 'europe' | 'asia'
+export type LevelId = 'world' | 'europe' | 'asia' | 'africa'
 
 export interface MapLevelDefinition {
   id: LevelId
@@ -14,6 +15,8 @@ export interface MapLevelDefinition {
   getCountryPaths: () => CountryPath[]
   getWaterPaths: () => WaterPath[]
   getWaterCircleZones: () => WaterCircleZone[]
+  getFeaturePaths?: () => MapFeaturePath[]
+  getLandCircleZones?: () => LandCircleZone[]
   findRegionAtDrop: (
     svg: SVGSVGElement,
     svgX: number,
@@ -24,6 +27,6 @@ export interface MapLevelDefinition {
   viewBox: { width: number; height: number }
   geoToSvg: (lon: number, lat: number) => [number, number]
   geoRadiusToSvg: (lon: number, lat: number, radiusDeg: number) => number
-  /** Northern water band for Arctic Ocean (Europe level). */
+  /** Northern water band for Arctic Ocean (Europe / Asia levels). */
   arcticBandMaxSvgY?: number
 }

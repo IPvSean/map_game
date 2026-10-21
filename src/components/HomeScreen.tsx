@@ -97,6 +97,33 @@ export function HomeScreen({ onStart }: HomeScreenProps) {
           </button>
         </div>
       </section>
+
+      <section className="level-section" aria-labelledby="level-4-heading">
+        <h2 id="level-4-heading" className="level-heading">
+          Level 4 — Africa
+        </h2>
+        <p className="level-desc">Regions, seas & landmarks</p>
+        <div className="mode-buttons">
+          <button
+            type="button"
+            className="mode-btn"
+            onClick={() => onStart({ levelId: 'africa', activity: 'flashcard' })}
+          >
+            <span className="mode-btn-icon" aria-hidden="true">🃏</span>
+            <span className="mode-btn-label">Flashcards</span>
+            <span className="mode-btn-desc">Pick the right answer</span>
+          </button>
+          <button
+            type="button"
+            className="mode-btn"
+            onClick={() => onStart({ levelId: 'africa', activity: 'map' })}
+          >
+            <span className="mode-btn-icon" aria-hidden="true">🗺️</span>
+            <span className="mode-btn-label">Africa Map</span>
+            <span className="mode-btn-desc">Drag labels to the map</span>
+          </button>
+        </div>
+      </section>
     </div>
   )
 }
