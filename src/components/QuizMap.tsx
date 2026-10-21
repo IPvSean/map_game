@@ -363,7 +363,10 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
           if (kind === 'river') {
             const hitWidth = strokeWidth ?? 10
             return (
-              <g key={regionId}>
+              <g
+                key={regionId}
+                className={hoveredRegionId === regionId ? 'drop-zone-pulse' : undefined}
+              >
                 <path
                   data-region={regionId}
                   data-feature="true"
@@ -375,16 +378,27 @@ export const QuizMap = forwardRef<SVGSVGElement, QuizMapProps>(function QuizMap(
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+                {active && (
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke="#e53935"
+                    strokeWidth={9}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={0.9}
+                    pointerEvents="none"
+                  />
+                )}
                 <path
                   d={d}
                   fill="none"
-                  stroke={active ? '#7e57c2' : '#6a4c9c'}
-                  strokeWidth={active ? 4.5 : 2.5}
+                  stroke={active ? '#1565c0' : '#1e88e5'}
+                  strokeWidth={active ? 3.5 : 2.5}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  opacity={active ? 1 : 0.85}
+                  opacity={1}
                   pointerEvents="none"
-                  className={hoveredRegionId === regionId ? 'drop-zone-pulse' : undefined}
                 />
               </g>
             )
